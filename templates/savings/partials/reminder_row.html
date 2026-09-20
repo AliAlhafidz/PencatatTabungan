@@ -1,0 +1,40 @@
+<div id="reminder-item-{{ reminder.pk }}" class="bg-surface-container rounded-3xl p-4 border border-outline-variant/20 flex items-center justify-between gap-3 hover:border-outline-variant/40 transition-colors">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center
+            {% if reminder.is_active %}bg-primary/20 text-primary border border-primary/20{% else %}bg-surface-container-high text-outline border border-outline-variant/20{% endif %}">
+            <span class="material-symbols-rounded text-xl">
+                {% if reminder.is_active %}alarm_on{% else %}alarm_off{% endif %}
+            </span>
+        </div>
+        <div>
+            <p class="text-xs font-bold {% if reminder.is_active %}text-apptext{% else %}text-outline line-through{% endif %}">
+                {{ reminder.title }}
+            </p>
+            <p class="text-[11px] text-outline mt-0.5">
+                Target: <span class="text-apptext font-semibold">{{ reminder.goal.name }}</span> • Jam {{ reminder.reminder_time|time:"H:i" }} ({{ reminder.get_frequency_display }})
+            </p>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+        <!-- Toggle Status Button -->
+        <button hx-post="{% url 'reminder_toggle' reminder.pk %}"
+                hx-target="#reminder-item-{{ reminder.pk }}"
+                hx-swap="outerHTML"
+                class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all
+                {% if reminder.is_active %}bg-tertiary/20 text-tertiary border border-tertiary/30{% else %}bg-surface-container-high text-outline border border-outline-variant/20{% endif %}"
+                title="Aktifkan/Nonaktifkan">
+            {% if reminder.is_active %}Aktif{% else %}Mati{% endif %}
+        </button>
+
+        <!-- Delete Reminder Button -->
+        <button hx-post="{% url 'reminder_delete' reminder.pk %}"
+                hx-confirm="Hapus pengingat ini?"
+                hx-target="#reminder-item-{{ reminder.pk }}"
+                hx-swap="outerHTML"
+                class="w-8 h-8 rounded-xl bg-surface-container-high hover:bg-error/20 hover:text-error text-outline flex items-center justify-center transition-colors"
+                title="Hapus">
+            <span class="material-symbols-rounded text-base">delete</span>
+        </button>
+    </div>
+</div>

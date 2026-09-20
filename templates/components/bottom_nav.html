@@ -1,0 +1,53 @@
+<!-- Material Design 3 Mobile Bottom Navigation Bar (Hidden on desktop md:hidden) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container/95 backdrop-blur-xl border-t border-outline-variant/20 px-3 py-2 z-40">
+    <div class="flex items-center justify-around relative max-w-lg mx-auto">
+        
+        <!-- Dashboard Item -->
+        <a href="{% url 'dashboard' %}" 
+           class="flex flex-col items-center gap-1 group transition-colors py-1 px-2.5 rounded-2xl {% if active_tab == 'dashboard' %}text-primary{% else %}text-outline hover:text-apptext{% endif %}">
+            <div class="px-3.5 py-1 rounded-full transition-all duration-300 {% if active_tab == 'dashboard' %}bg-primary/20 text-primary{% else %}group-hover:bg-surface-container-high{% endif %}">
+                <span class="material-symbols-rounded text-2xl {% if active_tab == 'dashboard' %}fill-1{% endif %}">home</span>
+            </div>
+            <span class="text-[11px] font-semibold tracking-wide">Beranda</span>
+        </a>
+
+        <!-- Target Goals Item -->
+        <a href="{% url 'goals' %}" 
+           class="flex flex-col items-center gap-1 group transition-colors py-1 px-2.5 rounded-2xl {% if active_tab == 'goals' %}text-primary{% else %}text-outline hover:text-apptext{% endif %}">
+            <div class="px-3.5 py-1 rounded-full transition-all duration-300 {% if active_tab == 'goals' %}bg-primary/20 text-primary{% else %}group-hover:bg-surface-container-high{% endif %}">
+                <span class="material-symbols-rounded text-2xl {% if active_tab == 'goals' %}fill-1{% endif %}">track_changes</span>
+            </div>
+            <span class="text-[11px] font-semibold tracking-wide">Target</span>
+        </a>
+
+        <!-- Center FAB: Tambah Target Baru (HTMX Modal Trigger) -->
+        <div class="-top-5 relative">
+            <button hx-get="{% url 'goal_create' %}"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary text-surface font-bold flex items-center justify-center shadow-lg shadow-primary/25 touch-bounce border-2 border-surface focus:outline-none"
+                    title="Tambah Target Baru">
+                <span class="material-symbols-rounded text-3xl font-black text-surface">add</span>
+            </button>
+        </div>
+
+        <!-- Pengingat Item -->
+        <a href="{% url 'reminders' %}" 
+           class="flex flex-col items-center gap-1 group transition-colors py-1 px-2.5 rounded-2xl {% if active_tab == 'reminders' %}text-primary{% else %}text-outline hover:text-apptext{% endif %}">
+            <div class="px-3.5 py-1 rounded-full transition-all duration-300 {% if active_tab == 'reminders' %}bg-primary/20 text-primary{% else %}group-hover:bg-surface-container-high{% endif %}">
+                <span class="material-symbols-rounded text-2xl {% if active_tab == 'reminders' %}fill-1{% endif %}">notifications</span>
+            </div>
+            <span class="text-[11px] font-semibold tracking-wide">Pengingat</span>
+        </a>
+
+        <!-- Setelan Item -->
+        <a href="{% url 'settings' %}" 
+           class="flex flex-col items-center gap-1 group transition-colors py-1 px-2.5 rounded-2xl {% if active_tab == 'settings' %}text-primary{% else %}text-outline hover:text-apptext{% endif %}">
+            <div class="px-3.5 py-1 rounded-full transition-all duration-300 {% if active_tab == 'settings' %}bg-primary/20 text-primary{% else %}group-hover:bg-surface-container-high{% endif %}">
+                <span class="material-symbols-rounded text-2xl {% if active_tab == 'settings' %}fill-1{% endif %}">tune</span>
+            </div>
+            <span class="text-[11px] font-semibold tracking-wide">Setelan</span>
+        </a>
+
+    </div>
+</nav>

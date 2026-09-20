@@ -1,0 +1,293 @@
+<div id="active-modal" 
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-opacity"
+     x-data="{
+        targetAmount: '{{ form.target_amount.value|default:"" }}',
+        displayTargetAmount: '',
+        plannedAmount: '{{ form.planned_amount_per_period.value|default:"" }}',
+        displayPlannedAmount: '',
+        frequency: '{{ form.period_frequency.value|default:"WEEKLY" }}',
+        imagePreview: '{% if goal.image %}{{ goal.image.url }}{% endif %}',
+        showFrequencyModal: false,
+
+        get frequencyLabel() {
+            if (this.frequency === 'DAILY') return 'Harian';
+            if (this.frequency === 'WEEKLY') return 'Mingguan';
+            if (this.frequency === 'MONTHLY') return 'Bulanan';
+            return 'Pilih Frekuensi';
+        },
+
+        init() {
+            if (this.targetAmount) {
+                this.targetAmount = this.targetAmount.toString().split('.')[0];
+                this.displayTargetAmount = this.formatDots(this.targetAmount);
+            }
+            if (this.plannedAmount && Number(this.plannedAmount) > 0) {
+                this.plannedAmount = this.plannedAmount.toString().split('.')[0];
+                this.displayPlannedAmount = this.formatDots(this.plannedAmount);
+            }
+        },
+
+        formatDots(val) {
+            if (!val) return '';
+            const num = val.toString().replace(/\D/g, '');
+            if (!num) return '';
+            return new Intl.NumberFormat('id-ID').format(Number(num));
+        },
+
+        onTargetInput(event) {
+            const raw = event.target.value.replace(/\D/g, '');
+            this.targetAmount = raw;
+            this.displayTargetAmount = this.formatDots(raw);
+        },
+
+        onPlannedInput(event) {
+            const raw = event.target.value.replace(/\D/g, '');
+            this.plannedAmount = raw;
+            this.displayPlannedAmount = this.formatDots(raw);
+        },
+
+        onFileChange(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.imagePreview = URL.createObjectURL(file);
+            }
+        },
+
+        removeImage() {
+            this.imagePreview = '';
+            const input = document.getElementById('id_image');
+            if (input) input.value = '';
+        },
+
+        get estimatedPeriods() {
+            const target = Number(this.targetAmount);
+            const planned = Number(this.plannedAmount);
+            if (!target || !planned || planned <= 0) return null;
+            return Math.ceil(target / planned);
+        },
+        get estimatedTimeLabel() {
+            const periods = this.estimatedPeriods;
+            if (!periods) return null;
+            if (this.frequency === 'DAILY') return `${periods} hari lagi`;
+            if (this.frequency === 'WEEKLY') return `${periods} minggu lagi`;
+            if (this.frequency === 'MONTHLY') return `${periods} bulan lagi`;
+            return `${periods} periode lagi`;
+        }
+     }">
+
+    <!-- Backdrop Click to Close -->
+    <div class="fixed inset-0 anim-fade" @click="$dispatch('closeModal')"></div>
+
+    <!-- Modal Content Card: Center & Sedikit Lebih ke Atas (-translate-y-4) -->
+    <div class="relative w-full max-w-md bg-surface-container rounded-3xl sm:rounded-4xl p-5 sm:p-6 border border-outline-variant/30 shadow-2xl z-10 max-h-[82vh] overflow-y-auto no-scrollbar space-y-4 -translate-y-4 sm:translate-y-0 anim-modal">
+        
+
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-black text-apptext">
+                    {% if is_edit %}Edit Target Tabungan{% else %}Target Tabungan Baru{% endif %}
+                </h3>
+                <p class="text-xs text-outline">Tentukan impian finansial yang ingin kamu capai</p>
+            </div>
+            <button type="button" @click="$dispatch('closeModal')" class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-outline hover:text-apptext transition-colors">
+                <span class="material-symbols-rounded text-lg">close</span>
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form {% if is_edit %}action="{% url 'goal_edit' goal.pk %}"{% else %}action="{% url 'goal_create' %}"{% endif %} 
+              method="post" 
+              enctype="multipart/form-data"
+              class="space-y-4">
+            {% csrf_token %}
+
+            <!-- Nama Target -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-apptext">Nama Target Tabungan <span class="text-primary">*</span></label>
+                {{ form.name }}
+            </div>
+
+            <!-- Upload Foto Target -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-apptext">Foto / Gambar Target (Opsional)</label>
+                <div class="flex items-center gap-3.5 bg-surface-container-high/60 p-3 rounded-3xl border border-outline-variant/25">
+                    <!-- Preview Thumbnail -->
+                    <div class="w-16 h-16 rounded-2xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30 shrink-0">
+                        <template x-if="imagePreview">
+                            <img :src="imagePreview" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="!imagePreview">
+                            <span class="material-symbols-rounded text-2xl text-outline">add_a_photo</span>
+                        </template>
+                    </div>
+
+                    <!-- Upload Label & File Input -->
+                    <div class="flex-1 space-y-1">
+                        <label for="id_image" class="cursor-pointer inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl bg-surface-container hover:bg-surface-container-highest text-primary border border-outline-variant/30 text-xs font-bold transition-all">
+                            <span class="material-symbols-rounded text-base">upload_file</span>
+                            <span x-text="imagePreview ? 'Ganti Foto' : 'Pilih Foto'"></span>
+                        </label>
+                        <input type="file" name="image" id="id_image" accept="image/*" class="hidden" @change="onFileChange($event)">
+                        <button type="button" x-show="imagePreview" @click="removeImage()" class="ml-2 text-xs text-error hover:underline font-semibold">
+                            Hapus
+                        </button>
+                        <p class="text-[10px] text-outline">Bisa berupa foto barang impian atau liburan.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Nominal (Dengan Titik Otomatis) -->
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-apptext">Nominal Target (Rp) <span class="text-primary">*</span></label>
+                    <span x-show="targetAmount && Number(targetAmount) > 0" class="text-xs font-bold text-primary" x-text="'Rp ' + displayTargetAmount"></span>
+                </div>
+                <!-- Hidden input untuk Django form POST -->
+                <input type="hidden" name="target_amount" id="id_target_amount" :value="targetAmount">
+                <!-- Visible input berformat titik otomatis -->
+                <input type="text" inputmode="numeric" id="display_target_amount"
+                       :value="displayTargetAmount"
+                       @input="onTargetInput($event)"
+                       required placeholder="Contoh: 3.000.000"
+                       class="w-full px-4 py-3.5 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-apptext placeholder-outline focus:outline-none focus:border-primary text-xl font-black">
+            </div>
+
+            <!-- Rencana Pengisian (Frekuensi & Nominal per periode dengan Titik Otomatis) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface-container-high/60 p-4 rounded-3xl border border-outline-variant/20">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-outline uppercase">Rencana Frekuensi</label>
+                    <!-- Hidden Input for Django Form POST -->
+                    <input type="hidden" name="period_frequency" id="id_period_frequency" :value="frequency">
+                    <!-- Custom Trigger Button opening Modal Picker -->
+                    <button type="button" 
+                            @click="showFrequencyModal = true" 
+                            class="w-full px-3.5 py-3 rounded-2xl bg-surface-container-highest border border-outline-variant/30 text-apptext text-xs font-bold focus:outline-none focus:border-primary flex items-center justify-between hover:bg-surface-container-high transition-colors touch-bounce">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-rounded text-base text-primary">event_repeat</span>
+                            <span x-text="frequencyLabel"></span>
+                        </div>
+                        <span class="material-symbols-rounded text-base text-outline">expand_more</span>
+                    </button>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-bold text-outline uppercase">Nominal (Rp)</label>
+                        <span x-show="plannedAmount && Number(plannedAmount) > 0" class="text-[10px] font-bold text-primary" x-text="'Rp ' + displayPlannedAmount"></span>
+                    </div>
+                    <!-- Hidden input untuk Django form POST -->
+                    <input type="hidden" name="planned_amount_per_period" id="id_planned_amount_per_period" :value="plannedAmount || '0'">
+                    <!-- Visible input berformat titik otomatis -->
+                    <input type="text" inputmode="numeric" id="display_planned_amount"
+                           :value="displayPlannedAmount"
+                           @input="onPlannedInput($event)"
+                           placeholder="Contoh: 50.000"
+                           class="w-full px-3.5 py-3 rounded-2xl bg-surface-container-highest border border-outline-variant/30 text-apptext text-xs font-bold focus:outline-none focus:border-primary">
+                </div>
+            </div>
+
+            <!-- Estimasi Tercapai Real-Time Callout -->
+            <div x-show="estimatedTimeLabel" class="p-3 rounded-2xl bg-primary/10 border border-primary/25 flex items-center gap-2.5 text-xs text-primary font-semibold">
+                <span class="material-symbols-rounded text-lg">timelapse</span>
+                <span>Estimasi target tercapai dalam <strong class="text-apptext font-bold" x-text="estimatedTimeLabel"></strong> jika disiplin menabung.</span>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="pt-3 flex items-center gap-3">
+                <button type="button" @click="$dispatch('closeModal')" class="flex-1 py-3 px-4 rounded-2xl bg-surface-container-high hover:bg-surface-container-highest text-apptext font-bold text-xs transition-colors border border-outline-variant/30">
+                    Batal
+                </button>
+                <button type="submit" class="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-primary to-secondary hover:brightness-110 text-surface font-extrabold text-xs shadow-lg shadow-primary/25 transition-all">
+                    {% if is_edit %}Simpan Perubahan{% else %}Buat Target{% endif %}
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- Frequency Selection Modal Picker -->
+    <div x-show="showFrequencyModal" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm anim-fade"
+         @click.self="showFrequencyModal = false">
+        
+        <div class="relative w-full max-w-xs bg-surface-container-high rounded-3xl p-5 border border-outline-variant/40 shadow-2xl space-y-4 anim-modal -translate-y-2">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-1 border-b border-outline-variant/20">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-rounded text-primary text-xl">update</span>
+                    <h4 class="text-sm font-black text-apptext">Pilih Frekuensi Menabung</h4>
+                </div>
+                <button type="button" @click="showFrequencyModal = false" class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center text-outline hover:text-apptext">
+                    <span class="material-symbols-rounded text-sm">close</span>
+                </button>
+            </div>
+
+            <!-- Frequency Choices -->
+            <div class="space-y-2">
+                <!-- Harian -->
+                <button type="button" 
+                        @click="frequency = 'DAILY'; showFrequencyModal = false"
+                        :class="frequency === 'DAILY' ? 'bg-primary text-surface font-bold border-primary shadow-md shadow-primary/20' : 'bg-surface-container hover:bg-surface-container-highest text-apptext border-outline-variant/30'"
+                        class="w-full p-3.5 rounded-2xl border flex items-center justify-between text-xs transition-all touch-bounce">
+                    <div class="flex items-center gap-3 text-left">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center"
+                             :class="frequency === 'DAILY' ? 'bg-surface/20 text-surface' : 'bg-surface-container-high text-primary'">
+                            <span class="material-symbols-rounded text-lg">calendar_view_day</span>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-xs">Harian</p>
+                            <p class="text-[10px] opacity-75 font-medium">Menyisihkan uang setiap hari</p>
+                        </div>
+                    </div>
+                    <span x-show="frequency === 'DAILY'" class="material-symbols-rounded text-lg">check_circle</span>
+                </button>
+
+                <!-- Mingguan -->
+                <button type="button" 
+                        @click="frequency = 'WEEKLY'; showFrequencyModal = false"
+                        :class="frequency === 'WEEKLY' ? 'bg-primary text-surface font-bold border-primary shadow-md shadow-primary/20' : 'bg-surface-container hover:bg-surface-container-highest text-apptext border-outline-variant/30'"
+                        class="w-full p-3.5 rounded-2xl border flex items-center justify-between text-xs transition-all touch-bounce">
+                    <div class="flex items-center gap-3 text-left">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center"
+                             :class="frequency === 'WEEKLY' ? 'bg-surface/20 text-surface' : 'bg-surface-container-high text-primary'">
+                            <span class="material-symbols-rounded text-lg">calendar_view_week</span>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-xs">Mingguan</p>
+                            <p class="text-[10px] opacity-75 font-medium">Menyisihkan uang tiap minggu</p>
+                        </div>
+                    </div>
+                    <span x-show="frequency === 'WEEKLY'" class="material-symbols-rounded text-lg">check_circle</span>
+                </button>
+
+                <!-- Bulanan -->
+                <button type="button" 
+                        @click="frequency = 'MONTHLY'; showFrequencyModal = false"
+                        :class="frequency === 'MONTHLY' ? 'bg-primary text-surface font-bold border-primary shadow-md shadow-primary/20' : 'bg-surface-container hover:bg-surface-container-highest text-apptext border-outline-variant/30'"
+                        class="w-full p-3.5 rounded-2xl border flex items-center justify-between text-xs transition-all touch-bounce">
+                    <div class="flex items-center gap-3 text-left">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center"
+                             :class="frequency === 'MONTHLY' ? 'bg-surface/20 text-surface' : 'bg-surface-container-high text-primary'">
+                            <span class="material-symbols-rounded text-lg">calendar_month</span>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-xs">Bulanan</p>
+                            <p class="text-[10px] opacity-75 font-medium">Menyisihkan uang saat gajian</p>
+                        </div>
+                    </div>
+                    <span x-show="frequency === 'MONTHLY'" class="material-symbols-rounded text-lg">check_circle</span>
+                </button>
+            </div>
+
+            <!-- Cancel Button -->
+            <button type="button" 
+                    @click="showFrequencyModal = false" 
+                    class="w-full py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-highest text-outline hover:text-apptext text-xs font-semibold transition-colors">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>

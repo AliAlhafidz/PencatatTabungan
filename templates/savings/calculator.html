@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Kalkulator Target Tabungan - Celengan MD3{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div>
+        <h2 class="text-xl font-bold text-apptext tracking-tight">Kalkulator Target</h2>
+        <p class="text-xs text-outline">Simulasikan berapa yang harus disisihkan untuk mencapai impianmu</p>
+    </div>
+
+    <!-- Calculator Input Form -->
+    <div class="bg-surface-container rounded-4xl p-5 border border-outline-variant/30 shadow-xl space-y-4">
+        <form hx-get="{% url 'calculate_plan' %}"
+              hx-target="#calc-result"
+              hx-trigger="input delay:200ms, change"
+              class="space-y-4">
+            
+            <!-- Target Nominal -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-apptext">Berapa nominal yang ingin dikumpulkan?</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-primary">Rp</span>
+                    <input type="number" name="target_amount" value="5000000" min="10000" step="50000" required
+                           class="w-full pl-12 pr-4 py-3 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-apptext placeholder-outline focus:outline-none focus:border-primary text-base font-bold">
+                </div>
+            </div>
+
+            <!-- Modal Awal (Opsional) -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-apptext">Sudah punya modal tabungan berapa? (Opsional)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-outline">Rp</span>
+                    <input type="number" name="initial_amount" value="500000" min="0" step="50000"
+                           class="w-full pl-12 pr-4 py-3 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-apptext placeholder-outline focus:outline-none focus:border-primary text-base font-semibold">
+                </div>
+            </div>
+
+            <!-- Target Tanggal -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-apptext">Kapan target ini harus terkumpul?</label>
+                <input type="date" name="target_date" id="calc_target_date" required
+                       class="w-full px-4 py-3 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-apptext focus:outline-none focus:border-primary text-base">
+            </div>
+
+            <!-- Frekuensi Menabung -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-apptext">Ingin menabung secara berkala setiap apa?</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="frequency" value="DAILY" class="peer sr-only">
+                        <div class="py-2.5 px-3 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-center text-xs font-bold text-outline peer-checked:bg-primary/20 peer-checked:text-primary peer-checked:border-primary transition-all">
+                            Harian
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="frequency" value="WEEKLY" checked class="peer sr-only">
+                        <div class="py-2.5 px-3 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-center text-xs font-bold text-outline peer-checked:bg-primary/20 peer-checked:text-primary peer-checked:border-primary transition-all">
+                            Mingguan
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="frequency" value="MONTHLY" class="peer sr-only">
+                        <div class="py-2.5 px-3 rounded-2xl bg-surface-container-high border border-outline-variant/30 text-center text-xs font-bold text-outline peer-checked:bg-primary/20 peer-checked:text-primary peer-checked:border-primary transition-all">
+                            Bulanan
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Live Calculation Result Container -->
+    <div id="calc-result" 
+         hx-get="{% url 'calculate_plan' %}?target_amount=5000000&initial_amount=500000&frequency=WEEKLY"
+         hx-trigger="load"
+         class="transition-all duration-300">
+        <div class="text-center py-6 text-outline text-xs animate-pulse">Menghitung simulasi rencana tabungan...</div>
+    </div>
+
+</div>
+
+<script>
+    // Set default target date: 90 days from today
+    document.addEventListener('DOMContentLoaded', () => {
+        const d = new Date();
+        d.setDate(d.getDate() + 90);
+        const dateInput = document.getElementById('calc_target_date');
+        if (dateInput && !dateInput.value) {
+            dateInput.value = d.toISOString().split('T')[0];
+            // Trigger calculation after setting default date
+            setTimeout(() => {
+                dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }, 100);
+        }
+    });
+</script>
+{% endblock %}

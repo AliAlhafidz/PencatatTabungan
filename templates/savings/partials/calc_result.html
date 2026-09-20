@@ -1,0 +1,61 @@
+{% load savings_filters %}
+<div id="calc-result" class="space-y-4">
+    {% if error %}
+    <div class="rounded-3xl bg-error/15 border border-error/30 p-4 text-center">
+        <p class="text-xs font-semibold text-error">{{ error }}</p>
+    </div>
+    {% else %}
+    <!-- Main Recommendation Card -->
+    <div class="rounded-3xl bg-gradient-to-br from-surface-container-high to-surface-container p-5 border border-primary/30 shadow-xl space-y-4">
+        
+        <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-primary">Rekomendasi Setoran</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-primary border border-primary/30">
+                {{ unit_label }}an
+            </span>
+        </div>
+
+        <div>
+            <p class="text-3xl font-black text-apptext tracking-tight">
+                {{ nominal_per_period|rupiah }}
+                <span class="text-xs font-medium text-outline">/ {{ period_name|lower }}</span>
+            </p>
+            <p class="text-xs text-outline mt-1">
+                Kamu perlu menabung selama <strong class="text-apptext">{{ periods }} {{ period_name|lower }}</strong> ({{ days }} hari) untuk mengumpulkan kekurangan <strong class="text-apptext">{{ remaining_needed|rupiah }}</strong>.
+            </p>
+        </div>
+
+        <!-- Simulation Comparison Grid (Harian / Mingguan / Bulanan) -->
+        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/25">
+            <div class="bg-surface-container-highest/60 rounded-2xl p-2.5 text-center">
+                <p class="text-[10px] text-outline font-semibold">Harian</p>
+                <p class="text-xs font-bold text-apptext mt-0.5">
+                    Rp {{ remaining_needed|default:0|floatformat:0 }}
+                </p>
+            </div>
+            <div class="bg-surface-container-highest/60 rounded-2xl p-2.5 text-center border border-primary/20">
+                <p class="text-[10px] text-primary font-semibold">Pilihanmu</p>
+                <p class="text-xs font-black text-primary mt-0.5">
+                    {{ nominal_per_period|rupiah }}
+                </p>
+            </div>
+            <div class="bg-surface-container-highest/60 rounded-2xl p-2.5 text-center">
+                <p class="text-[10px] text-outline font-semibold">Total Target</p>
+                <p class="text-xs font-bold text-apptext mt-0.5">
+                    {{ target_amount|rupiah }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick Create Goal button -->
+        <button hx-get="{% url 'goal_create' %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-primary to-secondary text-surface font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+            <span class="material-symbols-rounded text-base">add_circle</span>
+            Jadikan Target Tabungan
+        </button>
+
+    </div>
+    {% endif %}
+</div>

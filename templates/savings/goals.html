@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load savings_filters %}
+
+{% block title %}Daftar Target - Celengan MD3{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-extrabold tracking-tight">Target Tabungan</h2>
+            <p class="text-xs text-outline mt-0.5">Kelola impian & rencana menabungmu</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Filter Pills -->
+            <div class="flex items-center bg-surface-container p-1 rounded-2xl border border-outline-variant/25 text-xs font-semibold"
+                 x-data="{ active: '{{ status_filter }}' }">
+                <button @click="active = 'all'"
+                        hx-get="{% url 'goals' %}?status=all"
+                        hx-target="#goal-list-container"
+                        hx-swap="outerHTML"
+                        :class="active === 'all' ? 'bg-primary text-surface shadow-sm font-bold' : 'text-outline hover:text-apptext'"
+                        class="px-3 py-1.5 rounded-xl transition-all duration-200">
+                    Semua
+                </button>
+                <button @click="active = 'active'"
+                        hx-get="{% url 'goals' %}?status=active"
+                        hx-target="#goal-list-container"
+                        hx-swap="outerHTML"
+                        :class="active === 'active' ? 'bg-primary text-surface shadow-sm font-bold' : 'text-outline hover:text-apptext'"
+                        class="px-3 py-1.5 rounded-xl transition-all duration-200">
+                    Aktif
+                </button>
+                <button @click="active = 'achieved'"
+                        hx-get="{% url 'goals' %}?status=achieved"
+                        hx-target="#goal-list-container"
+                        hx-swap="outerHTML"
+                        :class="active === 'achieved' ? 'bg-primary text-surface shadow-sm font-bold' : 'text-outline hover:text-apptext'"
+                        class="px-3 py-1.5 rounded-xl transition-all duration-200">
+                    Tercapai
+                </button>
+            </div>
+
+            <!-- New Goal Button -->
+            <button hx-get="{% url 'goal_create' %}"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    class="py-2.5 px-4 rounded-2xl bg-gradient-to-r from-primary to-secondary text-surface font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-primary/20 hover:brightness-110 active:scale-95 transition-all shrink-0">
+                <span class="material-symbols-rounded text-base font-bold">add</span>
+                Buat Target
+            </button>
+        </div>
+    </div>
+
+    <!-- Goals List Container (HTMX swapped grid) -->
+    {% include 'savings/partials/goal_list.html' with goals=goals %}
+</div>
+{% endblock %}

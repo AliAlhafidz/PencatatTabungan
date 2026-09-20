@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Setelan - Celengan MD3{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+
+    <!-- Header Section -->
+    <div>
+        <h2 class="text-2xl font-extrabold tracking-tight">Setelan Aplikasi</h2>
+        <p class="text-xs text-outline mt-1">Kustomisasi tema tampilan dan izin notifikasi pengingat</p>
+    </div>
+
+    <!-- Section 1: Tema Tampilan -->
+    <div class="bg-surface-container rounded-4xl p-6 border border-outline-variant/30 shadow-xl space-y-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-primary/20 text-primary flex items-center justify-center">
+                <span class="material-symbols-rounded text-2xl">palette</span>
+            </div>
+            <div>
+                <h3 class="text-base font-bold">Tema Tampilan</h3>
+                <p class="text-xs text-outline">Pilih tema yang paling nyaman untuk matamu</p>
+            </div>
+        </div>
+
+        <!-- Theme Options Selector -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            
+            <!-- Dark Mode -->
+            <button type="button" 
+                    @click="setTheme('dark')"
+                    :class="currentTheme === 'dark' ? 'border-primary ring-2 ring-primary/40 bg-surface-container-high' : 'border-outline-variant/30 bg-surface-container-high/60 hover:bg-surface-container-high'"
+                    class="p-4 rounded-3xl border text-left transition-all duration-200 flex flex-col justify-between gap-4">
+                <div class="flex items-center justify-between w-full">
+                    <div class="w-10 h-10 rounded-2xl bg-[#121316] text-[#A8C7FA] flex items-center justify-center border border-gray-700">
+                        <span class="material-symbols-rounded text-xl">dark_mode</span>
+                    </div>
+                    <span x-show="currentTheme === 'dark'" class="material-symbols-rounded text-primary font-bold">check_circle</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold">Mode Gelap</h4>
+                    <p class="text-[11px] text-outline mt-0.5">Tampilan utama hemat daya</p>
+                </div>
+            </button>
+
+            <!-- Light Mode -->
+            <button type="button" 
+                    @click="setTheme('light')"
+                    :class="currentTheme === 'light' ? 'border-primary ring-2 ring-primary/40 bg-surface-container-high' : 'border-outline-variant/30 bg-surface-container-high/60 hover:bg-surface-container-high'"
+                    class="p-4 rounded-3xl border text-left transition-all duration-200 flex flex-col justify-between gap-4">
+                <div class="flex items-center justify-between w-full">
+                    <div class="w-10 h-10 rounded-2xl bg-[#F8F9FA] text-[#00639B] flex items-center justify-center border border-gray-300">
+                        <span class="material-symbols-rounded text-xl">light_mode</span>
+                    </div>
+                    <span x-show="currentTheme === 'light'" class="material-symbols-rounded text-primary font-bold">check_circle</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold">Mode Terang</h4>
+                    <p class="text-[11px] text-outline mt-0.5">Kontras bersih dan cerah</p>
+                </div>
+            </button>
+
+            <!-- System Auto -->
+            <button type="button" 
+                    @click="setTheme('system')"
+                    :class="currentTheme === 'system' ? 'border-primary ring-2 ring-primary/40 bg-surface-container-high' : 'border-outline-variant/30 bg-surface-container-high/60 hover:bg-surface-container-high'"
+                    class="p-4 rounded-3xl border text-left transition-all duration-200 flex flex-col justify-between gap-4">
+                <div class="flex items-center justify-between w-full">
+                    <div class="w-10 h-10 rounded-2xl bg-surface-container-highest text-outline flex items-center justify-center border border-outline-variant/30">
+                        <span class="material-symbols-rounded text-xl">devices</span>
+                    </div>
+                    <span x-show="currentTheme === 'system'" class="material-symbols-rounded text-primary font-bold">check_circle</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold">Ikuti Sistem</h4>
+                    <p class="text-[11px] text-outline mt-0.5">Otomatis dari perangkat</p>
+                </div>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Section 2: Izin Notifikasi -->
+    <div class="bg-surface-container rounded-4xl p-6 border border-outline-variant/30 shadow-xl space-y-5"
+         x-data="{
+            permissionStatus: 'Notification' in window ? Notification.permission : 'unsupported',
+            testSent: false,
+            requestPermission() {
+                if (!('Notification' in window)) {
+                    alert('Peramban Anda tidak mendukung Web Notification API.');
+                    return;
+                }
+                Notification.requestPermission().then((perm) => {
+                    this.permissionStatus = perm;
+                    if (perm === 'granted') {
+                        this.sendTestNotification();
+                    }
+                });
+            },
+            sendTestNotification() {
+                if (Notification.permission === 'granted') {
+                    new Notification('Celengan Siap Mengingatkanmu!', {
+                        body: 'Pengingat menabung berhasil diaktifkan di peramban ini.',
+                        icon: '/static/icons/icon-192.png',
+                    });
+                    this.testSent = true;
+                    setTimeout(() => this.testSent = false, 5000);
+                }
+            }
+         }">
+        
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-tertiary/20 text-tertiary flex items-center justify-center">
+                <span class="material-symbols-rounded text-2xl">notifications_active</span>
+            </div>
+            <div>
+                <h3 class="text-base font-bold">Izin Notifikasi Pengingat</h3>
+                <p class="text-xs text-outline">Kelola izin notifikasi lokal untuk jadwal menabung</p>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="bg-surface-container-high/60 rounded-3xl p-4 border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-outline">Status Izin:</span>
+                    <span x-show="permissionStatus === 'granted'" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-tertiary/20 text-tertiary border border-tertiary/30 inline-flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+                        Diizinkan (Aktif)
+                    </span>
+                    <span x-show="permissionStatus === 'denied'" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error/20 text-error border border-error/30 inline-flex items-center gap-1">
+                        Diblokir oleh Peramban
+                    </span>
+                    <span x-show="permissionStatus === 'default'" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
+                        Belum Diberikan
+                    </span>
+                    <span x-show="permissionStatus === 'unsupported'" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-surface-container-highest text-outline border border-outline-variant/30 inline-flex items-center gap-1">
+                        Tidak Didukung Browser
+                    </span>
+                </div>
+                <p class="text-[11px] text-outline">
+                    Aplikasi menggunakan <strong>Web Notification API</strong> lokal untuk membunyikan pengingat tanpa perlu layanan berbayar.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" 
+                        x-show="permissionStatus !== 'granted' && permissionStatus !== 'unsupported'"
+                        @click="requestPermission()"
+                        class="py-2.5 px-4 rounded-2xl bg-gradient-to-r from-primary to-secondary text-surface font-extrabold text-xs shadow-md shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+                    Minta Izin Notifikasi
+                </button>
+
+                <button type="button" 
+                        x-show="permissionStatus === 'granted'"
+                        @click="sendTestNotification()"
+                        class="py-2.5 px-4 rounded-2xl bg-surface-container-high hover:bg-surface-container-highest text-primary font-bold text-xs border border-outline-variant/30 active:scale-95 transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-rounded text-base">send</span>
+                    Uji Notifikasi
+                </button>
+            </div>
+        </div>
+
+        <div x-show="testSent" class="p-3 rounded-2xl bg-tertiary/15 border border-tertiary/30 text-xs text-tertiary font-semibold flex items-center gap-2">
+            <span class="material-symbols-rounded text-base">check_circle</span>
+            <span>Notifikasi uji coba telah dikirim ke perangkat Anda!</span>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

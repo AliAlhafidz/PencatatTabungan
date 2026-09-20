@@ -1,0 +1,22 @@
+<div id="goal-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for goal in goals %}
+        {% include 'savings/partials/goal_card.html' with goal=goal %}
+    {% empty %}
+    <div class="col-span-full rounded-3xl bg-surface-container/60 border border-outline-variant/20 p-8 text-center flex flex-col items-center justify-center my-6">
+        <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center text-outline mb-3">
+            <span class="material-symbols-rounded text-3xl">savings</span>
+        </div>
+        <h3 class="text-base font-bold text-apptext mb-1">Belum Ada Target Tabungan</h3>
+        <p class="text-xs text-outline max-w-xs mb-5">
+            Mulai petualangan finansialmu dengan membuat target tabungan impian pertamamu sekarang!
+        </p>
+        <button hx-get="{% url 'goal_create' %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="px-5 py-3 rounded-2xl bg-primary text-surface font-bold text-xs flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+            <span class="material-symbols-rounded text-base">add</span>
+            Buat Target Baru
+        </button>
+    </div>
+    {% endfor %}
+</div>

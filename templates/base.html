@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#121316" id="meta-theme-color">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Celengan - Aplikasi pencatat dan pemantau target tabungan personal">
+    <title>{% block title %}Celengan - Pencatat Target Tabungan{% endblock %}</title>
+
+    <!-- PWA Manifest & Icons -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="{% static 'icons/icon.svg' %}">
+    <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+
+    <!-- Google Fonts with display=swap for faster first paint -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" rel="stylesheet">
+
+    <!-- Instant Theme Detection Script -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('celengan-theme') || 'dark';
+            if (saved === 'dark' || (saved === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        surface: {
+                            DEFAULT: 'rgb(var(--color-surface) / <alpha-value>)',
+                            container: 'rgb(var(--color-surface-container) / <alpha-value>)',
+                            'container-high': 'rgb(var(--color-surface-container-high) / <alpha-value>)',
+                            'container-highest': 'rgb(var(--color-surface-container-highest) / <alpha-value>)',
+                        },
+                        primary: {
+                            DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
+                            container: 'rgb(var(--color-primary-container) / <alpha-value>)',
+                            on: 'rgb(var(--color-primary-on) / <alpha-value>)',
+                        },
+                        secondary: {
+                            DEFAULT: '#7FCFFF',
+                            container: '#004C6D',
+                        },
+                        tertiary: {
+                            DEFAULT: '#6DD58C',
+                            container: '#0A5328',
+                        },
+                        error: {
+                            DEFAULT: '#FFB4AB',
+                            container: '#93000A',
+                        },
+                        outline: {
+                            DEFAULT: 'rgb(var(--color-outline) / <alpha-value>)',
+                            variant: 'rgb(var(--color-outline-variant) / <alpha-value>)',
+                        },
+                        apptext: 'rgb(var(--color-text) / <alpha-value>)',
+                    },
+                    borderRadius: {
+                        '4xl': '2rem',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- CSS Theme Variables -->
+    <style>
+        :root {
+            --color-surface: 248 249 250;
+            --color-surface-container: 255 255 255;
+            --color-surface-container-high: 241 245 249;
+            --color-surface-container-highest: 226 232 240;
+            --color-text: 15 23 42;
+            --color-outline: 100 116 139;
+            --color-outline-variant: 226 232 240;
+            --color-primary: 37 99 235;
+            --color-primary-container: 219 234 254;
+            --color-primary-on: 255 255 255;
+        }
+        .dark {
+            --color-surface: 18 19 22;
+            --color-surface-container: 28 29 34;
+            --color-surface-container-high: 39 40 47;
+            --color-surface-container-highest: 50 52 60;
+            --color-text: 227 226 230;
+            --color-outline: 142 145 154;
+            --color-outline-variant: 68 71 78;
+            --color-primary: 168 199 250;
+            --color-primary-container: 0 74 119;
+            --color-primary-on: 6 46 111;
+        }
+
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+        .material-symbols-rounded.fill-1 {
+            font-variation-settings: 'FILL' 1;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [x-cloak] { display: none !important; }
+
+        /* Performance boost on mobile devices: eliminate heavy GPU backdrop rasterization */
+        @media (max-width: 768px) {
+            .backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+        }
+
+        /* Super Lightweight & Smooth Hardware-Accelerated Animations */
+        @keyframes modalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.94) translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes cardSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .anim-modal {
+            animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform, opacity;
+        }
+        .anim-fade {
+            animation: fadeIn 0.2s ease-out forwards;
+            will-change: opacity;
+        }
+        .anim-slide-up {
+            animation: cardSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform, opacity;
+        }
+        .touch-bounce {
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .touch-bounce:active {
+            transform: scale(0.96);
+        }
+    </style>
+
+    <!-- HTMX & Alpine.js -->
+    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    <script defer src="{% static 'vendor/alpine.min.js' %}"></script>
+</head>
+<body class="bg-surface text-apptext font-sans antialiased min-h-screen flex flex-col transition-colors duration-200"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+      x-data="{ 
+        currentTheme: localStorage.getItem('celengan-theme') || 'dark',
+        setTheme(theme) {
+            this.currentTheme = theme;
+            localStorage.setItem('celengan-theme', theme);
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                document.getElementById('meta-theme-color').setAttribute('content', '#121316');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                document.getElementById('meta-theme-color').setAttribute('content', '#F8F9FA');
+            }
+        }
+      }">
+
+    <!-- Toast Notifications -->
+    {% if messages %}
+    <div class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-md z-50 flex flex-col gap-2"
+         x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 -translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-4">
+        {% for message in messages %}
+        <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-surface-container-highest border border-outline-variant/40 shadow-xl text-sm font-medium">
+            <span class="material-symbols-rounded text-tertiary">check_circle</span>
+            <span class="flex-1">{{ message }}</span>
+            <button @click="show = false" class="text-outline hover:text-apptext">
+                <span class="material-symbols-rounded text-lg">close</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Responsive Top App Bar / Navigation -->
+    <header class="sticky top-0 z-30 bg-surface/90 backdrop-blur-md border-b border-outline-variant/20 px-4 sm:px-6 lg:px-8 py-3.5">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            
+            <!-- Brand / Logo -->
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary/20 to-secondary/30 border border-primary/30 flex items-center justify-center text-primary shadow-sm group-hover:scale-105 transition-transform">
+                    <span class="material-symbols-rounded fill-1 text-2xl">savings</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight flex items-center gap-1.5 leading-tight">
+                        Celengan
+                        <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">MD3</span>
+                    </h1>
+                    <p class="text-xs text-outline hidden sm:block">Pencatat & Pemantau Tabungan</p>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation Links (Hidden on mobile) -->
+            <nav class="hidden md:flex items-center gap-1 bg-surface-container p-1 rounded-2xl border border-outline-variant/20 text-sm font-semibold">
+                <a href="{% url 'dashboard' %}" 
+                   class="px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5 {% if active_tab == 'dashboard' %}bg-primary text-surface font-bold shadow-sm{% else %}text-outline hover:text-apptext{% endif %}">
+                    <span class="material-symbols-rounded text-lg">home</span>
+                    Beranda
+                </a>
+                <a href="{% url 'goals' %}" 
+                   class="px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5 {% if active_tab == 'goals' %}bg-primary text-surface font-bold shadow-sm{% else %}text-outline hover:text-apptext{% endif %}">
+                    <span class="material-symbols-rounded text-lg">track_changes</span>
+                    Target Tabungan
+                </a>
+                <a href="{% url 'reminders' %}" 
+                   class="px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5 {% if active_tab == 'reminders' %}bg-primary text-surface font-bold shadow-sm{% else %}text-outline hover:text-apptext{% endif %}">
+                    <span class="material-symbols-rounded text-lg">notifications</span>
+                    Pengingat
+                </a>
+                <a href="{% url 'settings' %}" 
+                   class="px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5 {% if active_tab == 'settings' %}bg-primary text-surface font-bold shadow-sm{% else %}text-outline hover:text-apptext{% endif %}">
+                    <span class="material-symbols-rounded text-lg">tune</span>
+                    Setelan
+                </a>
+            </nav>
+
+            <!-- Actions Header: New Goal Button + Theme Toggle (Desktop & Mobile) -->
+            <div class="flex items-center gap-2">
+                <!-- Desktop New Goal Button -->
+                <button hx-get="{% url 'goal_create' %}"
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML"
+                        class="hidden sm:flex items-center gap-1.5 py-2.5 px-4 rounded-2xl bg-gradient-to-r from-primary to-secondary text-surface font-bold text-xs shadow-md shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+                    <span class="material-symbols-rounded text-lg">add</span>
+                    Tambah Target
+                </button>
+
+                <!-- Quick Theme Toggle Pill -->
+                <button @click="setTheme(currentTheme === 'dark' ? 'light' : 'dark')" 
+                        class="w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-outline hover:text-primary transition-colors border border-outline-variant/25"
+                        title="Ganti Tema">
+                    <span class="material-symbols-rounded text-xl" x-show="currentTheme === 'dark'">light_mode</span>
+                    <span class="material-symbols-rounded text-xl" x-show="currentTheme !== 'dark'">dark_mode</span>
+                </button>
+
+                <!-- Mobile Settings Link (if on mobile) -->
+                <a href="{% url 'settings' %}" class="md:hidden w-10 h-10 rounded-2xl bg-surface-container flex items-center justify-center text-outline hover:text-primary transition-colors border border-outline-variant/25" title="Setelan">
+                    <span class="material-symbols-rounded text-xl">tune</span>
+                </a>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Content: Responsive Max Width for Desktop & Mobile -->
+    <main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 md:pb-12">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar (Hidden on Desktop: md:hidden) -->
+    {% include 'components/bottom_nav.html' %}
+
+    <!-- Modal Container for HTMX Injections -->
+    <div id="modal-container"></div>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => console.log('PWA Service Worker registered:', reg.scope))
+                    .catch((err) => console.warn('PWA Service Worker failed:', err));
+            });
+        }
+
+        document.body.addEventListener('closeModal', function() {
+            const modal = document.getElementById('active-modal');
+            if (modal) modal.remove();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

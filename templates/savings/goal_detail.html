@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load savings_filters %}
+
+{% block title %}{{ goal.name }} - Detail Target Celengan{% endblock %}
+
+{% block content %}
+<div id="goal-detail-wrapper" class="space-y-6">
+
+    <!-- Top Navigation Row -->
+    <div class="flex items-center justify-between">
+        <a href="{% url 'goals' %}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-surface-container text-outline hover:text-apptext transition-colors text-xs font-semibold border border-outline-variant/20">
+            <span class="material-symbols-rounded text-base">arrow_back</span>
+            Daftar Target
+        </a>
+
+        <!-- Danger zone delete button (Custom MD3 Modal) -->
+        <button hx-get="{% url 'goal_delete' goal.pk %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="px-3.5 py-2 rounded-2xl bg-error/10 hover:bg-error/20 text-error text-xs font-bold transition-colors flex items-center gap-1.5 border border-error/20 touch-bounce">
+            <span class="material-symbols-rounded text-base">delete</span>
+            Hapus Target
+        </button>
+    </div>
+
+    <!-- Responsive Layout: 2 Columns on Desktop, 1 Column on Mobile -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Column: Goal Progress Card -->
+        <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
+            {% include 'savings/partials/goal_progress_card.html' with goal=goal %}
+        </div>
+
+        <!-- Right Column: Riwayat Transaksi -->
+        <div class="lg:col-span-7 space-y-4">
+            <div class="bg-surface-container rounded-4xl p-6 border border-outline-variant/30 shadow-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold tracking-tight">Riwayat Transaksi</h3>
+                        <p class="text-xs text-outline">Catatan mutasi tambah & kurangi target ini</p>
+                    </div>
+
+                    <button hx-get="{% url 'transaction_create' goal.pk %}?type=DEPOSIT"
+                            hx-target="#modal-container"
+                            hx-swap="innerHTML"
+                            class="px-3.5 py-2 rounded-2xl bg-primary/15 hover:bg-primary/25 text-primary border border-primary/25 text-xs font-bold flex items-center gap-1.5 transition-colors">
+                        <span class="material-symbols-rounded text-base font-bold">add</span>
+                        Tambah
+                    </button>
+                </div>
+
+                {% include 'savings/partials/transaction_list.html' with transactions=transactions %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

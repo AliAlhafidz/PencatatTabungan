@@ -1,0 +1,52 @@
+{% load savings_filters %}
+<div id="transactions-list" class="space-y-3">
+    {% for tx in transactions %}
+    <div class="bg-surface-container rounded-3xl p-4 border border-outline-variant/20 flex items-center justify-between gap-3 hover:border-outline-variant/40 transition-colors">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl flex items-center justify-center
+                {% if tx.transaction_type == 'DEPOSIT' %}bg-tertiary/15 text-tertiary border border-tertiary/20{% else %}bg-error/15 text-error border border-error/20{% endif %}">
+                <span class="material-symbols-rounded text-xl">
+                    {% if tx.transaction_type == 'DEPOSIT' %}arrow_downward{% else %}arrow_upward{% endif %}
+                </span>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-apptext">{{ tx.note|default:tx.get_transaction_type_display }}</p>
+                <div class="flex items-center gap-2 text-[11px] text-outline mt-0.5">
+                    <span>{{ tx.transaction_date|date:"d M Y" }}</span>
+                    <span>•</span>
+                    <span class="{% if tx.transaction_type == 'DEPOSIT' %}text-tertiary/80{% else %}text-error/80{% endif %} font-medium">
+                        {{ tx.get_transaction_type_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="text-right">
+                <p class="text-sm font-black {% if tx.transaction_type == 'DEPOSIT' %}text-tertiary{% else %}text-error{% endif %}">
+                    {% if tx.transaction_type == 'DEPOSIT' %}+{% else %}-{% endif %}{{ tx.amount|rupiah }}
+                </p>
+            </div>
+
+            <!-- Delete Transaction Button -->
+            <button hx-post="{% url 'transaction_delete' tx.pk %}"
+                    hx-confirm="Yakin ingin menghapus catatan transaksi ini?"
+                    hx-target="#goal-detail-wrapper"
+                    hx-select="#goal-detail-wrapper"
+                    hx-swap="outerHTML"
+                    class="w-8 h-8 rounded-xl bg-surface-container-high hover:bg-error/20 hover:text-error text-outline flex items-center justify-center transition-colors"
+                    title="Hapus Transaksi">
+                <span class="material-symbols-rounded text-base">delete</span>
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="rounded-3xl bg-surface-container/50 border border-outline-variant/20 p-8 text-center flex flex-col items-center justify-center">
+        <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-outline mb-2">
+            <span class="material-symbols-rounded text-2xl">receipt_long</span>
+        </div>
+        <p class="text-xs font-bold text-apptext">Belum Ada Riwayat Transaksi</p>
+        <p class="text-[11px] text-outline mt-0.5">Mulai dengan mencatat setoran tabungan pertamamu!</p>
+    </div>
+    {% endfor %}
+</div>

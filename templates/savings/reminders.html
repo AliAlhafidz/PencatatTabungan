@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Pengingat Menabung - Celengan MD3{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+            <h2 class="text-2xl font-extrabold tracking-tight">Pengingat Menabung</h2>
+            <p class="text-xs text-outline mt-0.5">Jadwalkan alarm dan pengingat agar disiplin menabung</p>
+        </div>
+    </div>
+
+    <!-- Responsive Grid: Desktop 2 Columns, Mobile 1 Column -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Column: List of Reminders -->
+        <div class="lg:col-span-7 space-y-4">
+            <h3 class="text-base font-bold tracking-tight">Daftar Jadwal Pengingat</h3>
+            
+            <div class="space-y-3">
+                {% for reminder in reminders %}
+                    {% include 'savings/partials/reminder_row.html' with reminder=reminder %}
+                {% empty %}
+                <div class="rounded-4xl bg-surface-container/60 border border-outline-variant/20 p-8 text-center flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-outline mb-2">
+                        <span class="material-symbols-rounded text-2xl">alarm_off</span>
+                    </div>
+                    <p class="text-sm font-bold">Belum Ada Pengingat</p>
+                    <p class="text-xs text-outline mt-0.5">Buat pengingat baru di samping untuk target tabunganmu.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Column: Form Tambah Pengingat Baru (Sticky on desktop) -->
+        {% if goals %}
+        <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
+            <div class="bg-surface-container rounded-4xl p-6 border border-outline-variant/30 shadow-xl space-y-4">
+                <div>
+                    <h3 class="text-base font-bold">Tambah Pengingat Baru</h3>
+                    <p class="text-xs text-outline">Atur jadwal pengingat untuk target tabungan aktif</p>
+                </div>
+
+                <form action="{% url 'reminders' %}" method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- Pilih Target -->
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-outline uppercase tracking-wider">Pilih Target Tabungan</label>
+                        {{ form.goal }}
+                    </div>
+
+                    <!-- Judul Pengingat -->
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-outline uppercase tracking-wider">Pesan Pengingat</label>
+                        {{ form.title }}
+                    </div>
+
+                    <!-- Frekuensi & Waktu Jam -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold text-outline uppercase tracking-wider">Frekuensi</label>
+                            {{ form.frequency }}
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold text-outline uppercase tracking-wider">Jam Pengingat</label>
+                            {{ form.reminder_time }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-primary to-secondary text-surface font-extrabold text-xs shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+                        Simpan Jadwal Pengingat
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}
