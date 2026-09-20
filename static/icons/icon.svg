@@ -1,8 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="128" fill="#121316"/>
-  <circle cx="256" cy="256" r="180" fill="#004A77"/>
-  <circle cx="256" cy="256" r="150" fill="#A8C7FA"/>
-  <path d="M256 160c-53 0-96 36-96 80 0 25 14 47 36 62l-8 38 42-23c8 2 17 3 26 3 53 0 96-36 96-80s-43-80-96-80z" fill="#062E6F"/>
-  <circle cx="230" cy="220" r="10" fill="#A8C7FA"/>
-  <rect x="236" y="190" width="40" height="8" rx="4" fill="#A8C7FA"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A1C22"/>
+      <stop offset="100%" stop-color="#101114"/>
+    </linearGradient>
+
+    <!-- Piggy Body Gradient (Primary MD3 Cyan-Blue to Indigo) -->
+    <linearGradient id="piggyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A8C7FA"/>
+      <stop offset="50%" stop-color="#7FCFFF"/>
+      <stop offset="100%" stop-color="#3884ED"/>
+    </linearGradient>
+
+    <!-- Gold Coin Gradient -->
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE082"/>
+      <stop offset="100%" stop-color="#FFB300"/>
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#7FCFFF" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle App Icon Base -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="#A8C7FA" stroke-width="3" stroke-opacity="0.15"/>
+
+  <!-- Piggy Bank Group -->
+  <g filter="url(#shadow)">
+    
+    <!-- Piggy Ear (Back) -->
+    <path d="M190 150 Q160 90 220 120 Z" fill="#2962BA"/>
+
+    <!-- Piggy Legs (Bottom) -->
+    <!-- Front Left Leg -->
+    <rect x="180" y="340" width="38" height="48" rx="18" fill="#2962BA"/>
+    <!-- Front Right Leg -->
+    <rect x="290" y="340" width="38" height="48" rx="18" fill="#2962BA"/>
+    <!-- Back Leg Shading -->
+    <rect x="140" y="330" width="34" height="44" rx="16" fill="#183B75"/>
+    <rect x="250" y="330" width="34" height="44" rx="16" fill="#183B75"/>
+
+    <!-- Piggy Body -->
+    <ellipse cx="245" cy="255" rx="135" ry="110" fill="url(#piggyGrad)"/>
+
+    <!-- Cute Curly Tail -->
+    <path d="M115 250 C80 240 70 210 95 200 C115 190 120 220 100 225" fill="none" stroke="#7FCFFF" stroke-width="12" stroke-linecap="round"/>
+
+    <!-- Piggy Ear (Front) -->
+    <path d="M225 155 C210 95 270 105 260 160 Z" fill="#A8C7FA" filter="url(#glow)"/>
+    <path d="M228 145 C220 115 255 120 250 152 Z" fill="#F2B8B5" opacity="0.8"/>
+
+    <!-- Snout / Nose -->
+    <ellipse cx="365" cy="265" rx="42" ry="32" fill="#D3E3FD"/>
+    <!-- Nostrils -->
+    <ellipse cx="355" cy="265" rx="6" ry="10" fill="#0B57D0"/>
+    <ellipse cx="375" cy="265" rx="6" ry="10" fill="#0B57D0"/>
+
+    <!-- Eye (Happy Curved Smiling Eye) -->
+    <path d="M295 210 Q310 195 325 210" fill="none" stroke="#041E49" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Rosy Cheek -->
+    <circle cx="310" cy="245" r="16" fill="#F2B8B5" opacity="0.6"/>
+
+    <!-- Coin Slot on Top -->
+    <rect x="200" y="146" width="65" height="12" rx="6" fill="#0B57D0"/>
+
+    <!-- Golden Coin Dropping In -->
+    <g transform="translate(0, -10)">
+      <circle cx="232" cy="115" r="32" fill="url(#coinGrad)" stroke="#FFE57F" stroke-width="3"/>
+      <!-- Inner Coin Circle & Symbol -->
+      <circle cx="232" cy="115" r="24" fill="none" stroke="#C67C00" stroke-width="2" stroke-dasharray="3 2"/>
+      <text x="232" y="125" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="24" font-weight="900" fill="#C67C00" text-anchor="middle">Rp</text>
+    </g>
+
+  </g>
 </svg>
