@@ -4,9 +4,9 @@
 ---
 
 ## 1. Ringkasan Produk (Product Overview)
-**Celengan** adalah aplikasi web personal (*single-user*) berbasis mobile-first yang dirancang untuk membantu pengguna merencanakan, mencatat, dan memantau progres pencapaian target tabungan secara visual, teratur, dan intuitif. 
+**Celengan** adalah aplikasi web personal (*single-user*) berbasis mobile-first yang dirancang untuk membantu pengguna merencanakan, mencatat, dan memantau progres pencapaian target tabungan secara visual, teratur, ringan, dan intuitif.
 
-Aplikasi ini mengadopsi arsitektur **Modern Monolith / HTML-over-the-Wire** menggunakan **DATH Stack** (Django, Alpine.js, Tailwind CSS, HTMX) dengan bahasa visual **Google Material Design 3 (MD3)** yang mengutamakan tema gelap (*dark mode*) sebagai tampilan utama.
+Aplikasi ini mengadopsi arsitektur **Modern Monolith / HTML-over-the-Wire** menggunakan **DATH Stack** (Django, Alpine.js, Tailwind CSS, HTMX) dengan bahasa visual **Google Material Design 3 (MD3)** yang mengutamakan tema gelap (*Dark Theme First*) dan mendukung instalasi aplikasi native lewat Progressive Web App (PWA).
 
 Aplikasi ini **bukan** e-wallet, payment gateway, atau penyedia jasa keuangan, melainkan **buku catatan finansial digital berbasis target** (*goal-based savings tracker*).
 
@@ -15,33 +15,39 @@ Aplikasi ini **bukan** e-wallet, payment gateway, atau penyedia jasa keuangan, m
 ## 2. Tujuan & Scope Proyek
 
 ### 2.1 Tujuan
-- Memudahkan pengguna menetapkan target tabungan spesifik beserta tenggat waktu (*deadline*) dan frekuensi pengisian (harian, mingguan, bulanan).
-- Menyediakan kalkulator rencana menabung otomatis untuk menghitung jumlah yang harus disisihkan per periode.
-- Memberikan visualisasi kemajuan (*progress indicator*) yang memotivasi pengguna.
-- Membantu pencatatan riwayat setoran (tambah) dan penarikan (kurang) dengan cepat tanpa beban *page-reload* berlebih.
+- Memudahkan pengguna menetapkan target tabungan spesifik beserta unggahan foto impian, nominal target, dan frekuensi pengisian (harian, mingguan, bulanan).
+- Menyediakan dialog modal interaktif yang nyaman: form terpusat dan elevated di layar mobile, modal konfirmasi hapus khusus (*danger modal*), dan modal picker untuk pemilihan frekuensi menabung.
+- Menyediakan kalkulator rencana menabung otomatis untuk menghitung jumlah yang harus disisihkan per periode dan estimasi waktu tercapainya target.
+- Membantu pencatatan riwayat setoran (tambah) dan penarikan (kurang) secara instan tanpa beban *page-reload* berlebih.
+- Mengutamakan performa rendering yang sangat ringan pada perangkat mobile (*zero lag*) tanpa efek komputasi berat GPU.
 - Dirancang khusus memenuhi standar tugas UTS yang fungsional, bersih, modular, dan realistis tanpa kompleksitas autentikasi multi-user.
 
 ### 2.2 Batasan Scope (In-Scope vs Out-of-Scope)
 | In-Scope (Dikerjakan) | Out-of-Scope (Dihindari) |
 | :--- | :--- |
 | Single-user (tanpa login/register/role/session auth) | Multi-tenancy, registrasi, login, lupa password |
-| Manajemen target tabungan (CRUD) | Koneksi rekening bank / API perbankan |
+| Manajemen target tabungan (CRUD) + Upload Foto | Koneksi rekening bank / API perbankan |
 | Riwayat transaksi tabungan per target (Tambah/Kurang) | Payment gateway / transfer uang riil / e-wallet |
+| Modal terpusat & elevated untuk form target & mutasi | Form konvensional full-page reload |
+| Modal Picker khusus untuk frekuensi (Harian, Mingguan, Bulanan) | Native `<select>` dropdown mentah |
+| Modal konfirmasi hapus khusus bergaya MD3 | Dialog `window.confirm` / alert mentah browser |
+| Animasi mikro ringan terakselerasi GPU (`will-change`, `transform`) | Animasi berat berbasis JS loop / canvas |
 | Kalkulator target & rekomendasi nominal pengisian | Bunga bank, investasi, saham, kripto |
-| Bottom navigation, dialog modal, MD3 dark theme | Panel super-admin kompleks |
-| Pengingat/jadwal menabung lokal (browser notification / alert banner) | Pengiriman SMS / WhatsApp gateway berbayar |
-| Pengaturan preferensi (mata uang default, toggle notifikasi) | Multi-currency live exchange rate API |
+| PWA lengkap (Service Worker, Manifest, Piggy Bank Icon) | Notifikasi push cloud berbayar (FCM/OneSignal) |
+| Pengingat/jadwal menabung lokal (browser notification / banner) | Pengiriman SMS / WhatsApp gateway berbayar |
+| Pengaturan preferensi (nama, simbol mata uang, seed demo, reset) | Multi-currency live exchange rate API |
 
 ---
 
-## 3. Arsitektur Teknologi (DATH Stack)
+## 3. Arsitektur Teknologi (DATH Stack & PWA)
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Browser (Mobile-First / MD3 Dark UI)"]
+    subgraph Client ["Client Browser (Mobile-First / MD3 Dark UI / PWA)"]
         UI["UI Layer (Tailwind CSS + Material 3 Tokens)"]
-        Alpine["Alpine.js (Modals, Dropdowns, Client-side States)"]
+        Alpine["Alpine.js (Modals, Frequency Picker, Client State)"]
         HTMX["HTMX (AJAX Calls, Partial Swaps, Form Submissions)"]
+        SW["Service Worker (PWA Offline Caching & Piggy Icon)"]
     end
 
     subgraph Server ["Django Backend (Modern Monolith)"]
@@ -51,25 +57,29 @@ flowchart TD
         Models["Django ORM Models"]
     end
 
-    subgraph Storage ["Database"]
+    subgraph Storage ["Database & Media"]
         SQLite[("SQLite Database")]
+        Media["Local Storage (Goal Images)"]
     end
 
     UI --> HTMX
     UI --> Alpine
+    SW --> UI
     HTMX -- "GET / POST (hx-get, hx-post)" --> Urls
     Urls --> Views
     Views --> Models
     Models --> SQLite
+    Models --> Media
     Views --> Templates
     Templates -- "HTML Partials (hx-swap)" --> HTMX
 ```
 
-- **Django (Python)**: Core backend framework, routing, ORM, business logic, dan template rendering.
-- **HTMX**: Mengakomodasi konsep *HTML-over-the-Wire* untuk interaksi dinamis (seperti menambah tabungan, filter riwayat, membuka modal form) tanpa reload halaman penuh.
-- **Tailwind CSS**: Utility-first CSS untuk styling layout responsif dan komponen Material Design 3 (warna Surface, Primary, Secondary, Container, rounded corners 16–28px, elevation).
-- **Alpine.js**: Mengelola interaktivitas mikro sisi klien (state modal, dropdown icon picker, kalkulator instan, drawer).
-- **SQLite**: Database default Django yang ringan, portabel, dan cocok untuk arsitektur single-user.
+- **Django 5 (Python 3.14)**: Core backend framework, routing, ORM, business logic, dan template rendering.
+- **HTMX 2**: Mengakomodasi konsep *HTML-over-the-Wire* untuk interaksi dinamis (seperti menambah tabungan, filter riwayat, membuka modal form, menghapus target) tanpa reload halaman penuh.
+- **Tailwind CSS**: Utility-first CSS untuk styling layout responsif dan komponen Material Design 3 (warna Surface, Primary, Secondary, Container, rounded corners 24–32px).
+- **Alpine.js 3**: Mengelola interaktivitas mikro sisi klien (state modal terpusat, modal picker frekuensi menabung, format titik ribuan otomatis, preview foto).
+- **Service Worker & PWA**: Kemampuan caching offline (`celengan-v2`) dan ikon aplikasi celengan babi (*piggy bank*) mandiri di homescreen smartphone.
+- **SQLite**: Database default Django yang ringan, portabel, dan ideal untuk arsitektur personal.
 
 ---
 
@@ -79,29 +89,49 @@ flowchart TD
 flowchart TD
     Start([Buka Aplikasi]) --> Dashboard[Halaman Dashboard]
     
-    Dashboard --> ActionChoose{Pilih Aksi}
+    Dashboard --> ActionChoose{Pilih Aksi Pengguna}
     
-    ActionChoose -->|Lihat Ringkasan| ViewStats[Total Tabungan, Target Aktif & Tercapai]
-    ActionChoose -->|Buat Target Baru| NewGoalModal[Buka Form Tambah Target]
+    ActionChoose -->|Lihat Ringkasan| ViewStats[Total Tabungan & Kartu Target Aktif]
+    ActionChoose -->|Tekan Tombol FAB +| NewGoalModal[Buka Modal Tambah Target]
     ActionChoose -->|Klik Kartu Target| DetailGoal[Halaman Detail Target]
-    ActionChoose -->|Buka Pengaturan| SettingsPage[Halaman Pengaturan & Preferensi]
+    ActionChoose -->|Menu Navigasi| BottomNav{Pindah Halaman}
+    
+    BottomNav --> GoalsPage[Halaman Daftar Target]
+    BottomNav --> RemindersPage[Halaman Jadwal Pengingat]
+    BottomNav --> SettingsPage[Halaman Pengaturan & Demo Data]
 
-    NewGoalModal --> InputGoal[Isi Nama, Target Nominal, Tenggat, Frekuensi, Icon]
-    InputGoal --> CalcAssist[Gunakan Kalkulator Nominal Otomatis]
-    CalcAssist --> SaveGoal[Simpan Target via HTMX]
-    SaveGoal --> Dashboard
+    subgraph ModalCreateTarget ["Modal Tambah / Edit Target Tabungan"]
+        NewGoalModal --> InputName[Ketik Nama Target]
+        NewGoalModal --> InputPhoto[Pilih Foto Target - Opsional]
+        NewGoalModal --> InputTargetAmount[Isi Target Nominal - Format Titik Otomatis]
+        NewGoalModal --> OpenFreqModal[Ketuk Rencana Frekuensi]
+        OpenFreqModal --> PickFreqModal[Pilih Opsi di Modal Picker: Harian / Mingguan / Bulanan]
+        PickFreqModal --> InputPlannedAmount[Isi Nominal Rencana Tabungan]
+        InputPlannedAmount --> LiveEst[Estimasi Waktu Tercapai Terhitung Otomatis]
+        LiveEst --> SubmitGoal[Simpan Target via HTMX]
+    end
 
-    DetailGoal --> GoalAction{Aksi pada Target}
-    GoalAction --> AddSavings[Setor Tabungan: Tambah Nominal + Catatan]
-    GoalAction --> SubSavings[Tarik Tabungan: Kurang Nominal + Catatan]
-    GoalAction --> EditGoal[Edit Target / Tenggat Waktu]
-    GoalAction --> DeleteGoal[Hapus Target & Riwayat]
+    SubmitGoal --> Dashboard
 
-    AddSavings --> UpdateProgress[Update Otomatis Terkumpul & % Progres]
-    SubSavings --> UpdateProgress
-    UpdateProgress --> CheckTarget{Apakah Terkumpul >= Target?}
-    CheckTarget -->|Ya| MarkAchieved[Ubah Status Menjadi Tercapai / Selesai 🎉]
-    CheckTarget -->|Belum| StayActive[Status Tetap Aktif]
+    subgraph DetailTargetFlow ["Interaksi Halaman Detail Target"]
+        DetailGoal --> DetailActions{Pilih Aksi Target}
+        DetailActions --> AddMoney[Klik Tambah: Modal Setoran Terpusat]
+        DetailActions --> SubMoney[Klik Kurangi: Modal Penarikan Terpusat]
+        DetailActions --> EditGoal[Klik Edit: Modal Edit Target]
+        DetailActions --> DeleteGoalBtn[Klik Hapus Target]
+        
+        DeleteGoalBtn --> ConfirmDeleteModal[Muncul Modal Konfirmasi Hapus MD3]
+        ConfirmDeleteModal -->|Batal| DetailGoal
+        ConfirmDeleteModal -->|Ya, Hapus Sekarang| ExecuteDelete[Hapus Target & Semua Mutasi]
+        ExecuteDelete --> RedirectHome[Kembali ke Beranda via HX-Redirect]
+        
+        AddMoney --> SaveTx[Simpan Mutasi]
+        SubMoney --> SaveTx
+        SaveTx --> UpdateBalance[Saldo & Status Diperbarui Real-time]
+        UpdateBalance --> CheckAchieved{Saldo >= Target?}
+        CheckAchieved -->|Ya| StatusAchieved[Status Berubah: Tercapai 🎉]
+        CheckAchieved -->|Belum| StatusActive[Status Tetap: Aktif]
+    end
 ```
 
 ---
@@ -109,78 +139,61 @@ flowchart TD
 ## 5. Kebutuhan Fungsional (Functional Requirements)
 
 ### 5.1 Modul Dashboard
-- **FR-01**: Menampilkan ringkasan metrik utama dalam format kartu MD3:
-  - Total uang yang terkumpul dari seluruh target.
-  - Jumlah target tabungan yang masih aktif.
-  - Jumlah target tabungan yang telah tercapai (*achieved*).
-  - Rata-rata persentase pencapaian keseluruhan.
-- **FR-02**: Menampilkan daftar kartu target tabungan aktif dengan *progress bar*, sisa nominal, dan tenggat waktu.
-- **FR-03**: Menampilkan filter tab: **Semua**, **Aktif**, dan **Selesai/Tercapai**.
-- **FR-04**: Tombol aksi cepat (*Floating Action Button / FAB*) untuk membuat target tabungan baru.
+- **FR-01**: Menampilkan ringkasan metrik utama dalam format kartu MD3 yang bersih:
+  - Total saldo tabungan yang telah terkumpul (dengan format rupiah rapi).
+  - Total nominal yang ditargetkan dari seluruh impian.
+  - Jumlah target tabungan aktif dan tercapai.
+- **FR-02**: Menampilkan daftar kartu target tabungan aktif dengan visual cover foto, nominal saat ini, dan estimasi waktu selesai.
+- **FR-03**: Tombol Floating Action Button (FAB) di tengah bilah navigasi bawah dengan animasi sentuh `touch-bounce` untuk membuka form modal target.
 
 ### 5.2 Modul Target Tabungan (Savings Goals)
-- **FR-05**: Pengguna dapat menambahkan target tabungan baru dengan atribut:
-  - Nama Target (contoh: "Beli Laptop Baru", "Dana Darurat").
-  - Kategori / Icon (pilihan icon emoji atau Material Symbols).
-  - Nominal Target (angka positif).
-  - Mata Uang (default: IDR `Rp`).
-  - Tanggal Target / Deadline.
-  - Rencana Frekuensi Pengisian: Harian, Mingguan, atau Bulanan.
-- **FR-06**: Pengguna dapat mengedit detail target tabungan.
-- **FR-07**: Pengguna dapat menghapus target tabungan (beserta konfirmasi hapus modal dan penghapusan transaksi terkait secara *cascade*).
-- **FR-08**: Sistem otomatis mengubah status menjadi `Tercapai` jika total terkumpul $\ge$ nominal target, dan menyediakan efek perayaan visual (badge selesai).
+- **FR-04**: Pengguna dapat menambahkan target tabungan baru dengan atribut:
+  - Nama Target (contoh: "Beli Laptop Baru", "Liburan").
+  - Foto/Gambar Target (opsional dengan preview instan).
+  - Nominal Target (dengan format pemisah titik ribuan otomatis).
+  - Rencana Frekuensi Pengisian: Harian, Mingguan, atau Bulanan (dipilih via **Modal Picker Khusus**).
+  - Nominal Rencana Pengisian per periode.
+- **FR-05**: Estimasi waktu tercapai (*time-to-goal*) dihitung otomatis secara real-time pada modal sesuai rencana pengisian.
+- **FR-06**: Pengguna dapat mengedit data target tabungan.
+- **FR-07**: Pengguna dapat menghapus target tabungan melalui **Modal Konfirmasi Khusus (Custom MD3 Delete Modal)** dengan tombol konfirmasi bahaya merah (`bg-error`), menghapus seluruh catatan transaksi terkait secara *cascade*.
+- **FR-08**: Sistem otomatis mengubah status menjadi `Tercapai` jika total saldo $\ge$ target nominal.
 
-### 5.3 Modul Kalkulator & Rencana Tabungan
-- **FR-09**: Saat membuat/mengedit target, aplikasi menyediakan kalkulator terintegrasi:
-  - Menghitung sisa hari/minggu/bulan antara tanggal hari ini hingga tanggal target.
-  - Menghitung rekomendasi nominal simpanan per periode:
-    $$\text{Rekomendasi Setoran} = \frac{\text{Kekurangan Nominal}}{\text{Jumlah Periode Tersisa}}$$
-- **FR-10**: Memberikan fleksibilitas bagi pengguna untuk menentukan nominal pengisian manual jika tidak menggunakan rekomendasi otomatis.
-
-### 5.4 Modul Transaksi Tabungan (Transactions)
-- **FR-11**: Pengguna dapat mencatat mutasi saldo pada target tertentu:
+### 5.3 Modul Transaksi Tabungan (Transactions)
+- **FR-09**: Pengguna dapat mencatat mutasi saldo pada target tertentu melalui modal yang terpusat dan elevated:
   - Tipe aksi: **Tambah (Deposit)** atau **Kurang (Withdrawal)**.
-  - Nominal mutasi.
-  - Tanggal transaksi (default: hari ini).
-  - Catatan / Keterangan opsional (contoh: "Sisa uang saku", "Bonus proyek").
-- **FR-12**: Sistem memperbarui jumlah saldo terkumpul dan persentase progress target secara *real-time* via HTMX partial swap.
-- **FR-13**: Menampilkan daftar riwayat mutasi pada halaman detail target, diurutkan dari transaksi terbaru.
-- **FR-14**: Pengguna dapat menghapus transaksi yang keliru catat, dan saldo target otomatis disesuaikan kembali.
+  - Nominal mutasi (dengan chip nominal cepat & pemisah ribuan otomatis).
+  - Tanggal mutasi dan catatan opsional.
+- **FR-10**: Riwayat transaksi tercatat rapi dan transaksi yang salah dapat dihapus dengan penyesuaian saldo otomatis.
 
-### 5.5 Modul Notifikasi & Pengingat (Reminders)
-- **FR-15**: Pengguna dapat mengaktifkan jadwal pengingat menabung sesuai frekuensi target (misal: "Ingatkan setiap pukul 20:00").
-- **FR-16**: Menampilkan banner pengingat menabung hari ini pada bagian atas Dashboard jika ada target aktif yang belum diisi sesuai jadwal periodik.
-- **FR-17**: Dukungan *Web Notification API* browser (opsional dapat diizinkan pengguna) untuk pengingat lokal tanpa butuh backend service berbayar.
+### 5.4 Modul Notifikasi & Pengingat (Reminders)
+- **FR-11**: Pengguna dapat mengaktifkan jadwal pengingat menabung sesuai jam dan frekuensi yang ditentukan.
+- **FR-12**: Toggle status aktif/mati pengingat secara instan via HTMX.
+- **FR-13**: Banner jadwal pengingat harian otomatis muncul jika ada target tabungan aktif yang perlu diisi.
 
-### 5.6 Modul Pengaturan Aplikasi (Settings)
-- **FR-18**: Pengaturan preferensi umum:
-  - Nama panggilan pengguna (untuk sapaan ramah di Dashboard, misal: "Halo, Budi!").
-  - Simbol mata uang default (default: `Rp`).
-  - Format tanggal (DD/MM/YYYY).
-- **FR-19**: Pengelolaan data:
-  - Fitur *Reset Data* (hapus semua data tabungan dengan konfirmasi ketat).
-  - Fitur *Load Dummy / Sample Data* (untuk kemudahan demonstrasi UTS penguji/dosen).
+### 5.5 Modul Pengaturan & Utilitas Demonstrasi (Settings)
+- **FR-14**: Pengaturan profil sapaan pengguna dan simbol mata uang default (`Rp`).
+- **FR-15**: Tombol **Isi Sampel Data Tabungan (Demo)** untuk langsung mempopulasikan data uji siap pakai.
+- **FR-16**: Tombol **Reset Semua Data** untuk mengosongkan database kembali ke titik nol.
 
 ---
 
-## 6. Desain Visual & UI/UX (Material Design 3 - Dark Theme)
+## 6. Desain Visual & UI/UX (Material Design 3 - Dark Theme First)
 
-Aplikasi mengutamakan tema gelap (*Dark Theme First*) sesuai pedoman Material Design 3:
 - **Warna Palet (MD3 Dark Tokens)**:
-  - `Surface / Background`: `#121316` (latar utama aplikasi)
-  - `Surface Container`: `#1E1F24` (latar kartu & navigation bar)
-  - `Surface Container High`: `#292A2F` (modal dialog, elevated cards)
-  - `Primary`: `#A8C7FA` (Cyan/Sky Blue lembut khas MD3)
-  - `On Primary`: `#062E6F`
-  - `Primary Container`: `#0842A0`
-  - `Secondary / Accent`: `#7FCFFF` / `#6DD58C` (hijau sukses untuk progress & status selesai)
+  - `Surface / Background`: `#121316` (latar belakang solid hemat daya)
+  - `Surface Container`: `#1C1D22` (kartu target & panel navigasi)
+  - `Surface Container High`: `#27282F` (modal form terpusat)
+  - `Primary`: `#A8C7FA` (Cyan/Sky Blue MD3)
+  - `Secondary / Accent`: `#7FCFFF`
+  - `Tertiary`: `#6DD58C` (Hijau sukses untuk status tercapai)
   - `Outline / Border`: `#44474E`
-  - `Error / Kurang`: `#F2B8B5` (soft red untuk penarikan/hapus)
-- **Komponen Kunci**:
-  - **Bottom Navigation Bar**: Navigasi tetap di bagian bawah layar (Dashboard, Target Tabungan, Pengingat, Pengaturan).
-  - **Elevated / Filled Cards**: Sudut melengkung (*rounded-3xl* / 24px) dengan visual progress bar bertingkat.
-  - **Floating Action Button (FAB)**: Akses instan di pojok kanan bawah untuk menambah tabungan baru.
-  - **HTMX Modals / Bottom Sheets**: Form input yang muncul dari bawah pada layar smartphone tanpa navigasi pindah halaman.
+  - `Error / Danger`: `#F2B8B5` / `#B3261E` (merah untuk hapus & penarikan)
+- **Peningkatan Ergonomi & UI Mobile**:
+  - **Centered & Elevated Modals**: Modal form target dan mutasi tabungan berada di posisi tengah layar dengan offset `-translate-y-4` yang nyaman dijangkau jari dan tidak terhimpit keyboard virtual.
+  - **Frequency Selection Modal**: Pemilihan frekuensi menabung menggunakan modal kartu picker dengan ikon dan keterangan jelas, menggantikan dropdown `<select>` mentah bawaan browser.
+  - **Custom Delete Confirmation Modal**: Dialog konfirmasi hapus khusus dengan ikon peringatan bahaya, menggantikan alert browser mentah.
+  - **Micro-Animations Ringan**: Animasi *pop-in* modal (`anim-modal`), *slide-up* kartu (`anim-slide-up`), dan sensasi tombol kenyal (`touch-bounce`) yang digerakkan sepenuhnya oleh GPU (`transform` & `opacity`).
+  - **Optimasi Performa Ponsel**: Menonaktifkan efek berat `backdrop-filter: blur` pada layar kecil (`@media (max-width: 768px)`) untuk menjamin navigasi 60 FPS tanpa patah-patah.
 
 ---
 
@@ -205,6 +218,8 @@ erDiagram
         string name
         string description
         string icon_name
+        string color_theme
+        string image
         decimal target_amount
         decimal current_amount
         string currency
@@ -247,90 +262,74 @@ erDiagram
 ### 7.2 Kamus Data & Spesifikasi Entitas
 
 #### 1. Entitas: `SAVINGS_GOAL` (Target Tabungan)
-Tabel utama penyimpan informasi target finansial yang ingin dicapai.
+Tabel utama penyimpan informasi target impian finansial.
 
 | Atribut | Tipe Data | Nullable | Default | Deskripsi |
 | :--- | :--- | :---: | :--- | :--- |
 | `id` | `INTEGER` | NO | AUTO_INCREMENT | Primary Key. |
-| `name` | `VARCHAR(100)` | NO | - | Nama target (misal: "Beli Sepeda"). |
-| `description` | `TEXT` | YES | NULL | Deskripsi atau motivasi target. |
-| `icon_name` | `VARCHAR(50)` | NO | `'savings'` | Identifier icon MD3 / emoji. |
-| `target_amount` | `DECIMAL(14,2)`| NO | - | Target nominal yang ingin dicapai. |
-| `current_amount` | `DECIMAL(14,2)`| NO | `0.00` | Jumlah saldo yang telah terkumpul (dihitung otomatis). |
-| `currency` | `VARCHAR(10)` | NO | `'IDR'` | Kode mata uang (IDR, USD, dll). |
-| `start_date` | `DATE` | NO | `current_date` | Tanggal awal mulai menabung. |
-| `target_date` | `DATE` | NO | - | Tenggat waktu / deadline target. |
-| `period_frequency` | `VARCHAR(20)` | NO | `'DAILY'` | Rencana: `'DAILY'`, `'WEEKLY'`, `'MONTHLY'`. |
-| `planned_amount_per_period` | `DECIMAL(14,2)` | NO | `0.00` | Nominal pengisian per periode hasil kalkulator. |
-| `status` | `VARCHAR(20)` | NO | `'ACTIVE'` | Status target: `'ACTIVE'`, `'ACHIEVED'`, `'CANCELLED'`. |
-| `created_at` | `DATETIME` | NO | `now()` | Timestamp pembuatan data. |
-| `updated_at` | `DATETIME` | NO | `now()` | Timestamp pembaruan data terakhir. |
+| `name` | `VARCHAR(100)` | NO | - | Nama target (misal: "Beli Laptop", "Dana Darurat"). |
+| `description` | `TEXT` | YES | NULL | Catatan motivasi target. |
+| `icon_name` | `VARCHAR(50)` | NO | `'savings'` | Identifier icon MD3. |
+| `color_theme` | `VARCHAR(20)` | NO | `'blue'` | Pilihan tema aksen target. |
+| `image` | `VARCHAR(100)` | YES | NULL | Lokasi file foto target di `media/goals/`. |
+| `target_amount` | `DECIMAL(14,2)`| NO | - | Nominal target yang ingin dicapai. |
+| `current_amount` | `DECIMAL(14,2)`| NO | `0.00` | Saldo terkumpul (hasil kalkulasi transaksi). |
+| `currency` | `VARCHAR(10)` | NO | `'IDR'` | Kode mata uang. |
+| `start_date` | `DATE` | NO | `current_date` | Tanggal mulai menabung. |
+| `target_date` | `DATE` | YES | NULL | Tanggal tenggat waktu (opsional). |
+| `period_frequency` | `VARCHAR(20)` | NO | `'DAILY'` | Pilihan frekuensi: `'DAILY'`, `'WEEKLY'`, `'MONTHLY'`. |
+| `planned_amount_per_period` | `DECIMAL(14,2)` | NO | `0.00` | Rencana nominal simpanan per periode. |
+| `status` | `VARCHAR(20)` | NO | `'ACTIVE'` | Status: `'ACTIVE'`, `'ACHIEVED'`, `'CANCELLED'`. |
+| `created_at` | `DATETIME` | NO | `now()` | Waktu pembuatan data. |
+| `updated_at` | `DATETIME` | NO | `now()` | Waktu pembaruan data terakhir. |
 
 ---
 
 #### 2. Entitas: `TRANSACTION` (Mutasi Catatan Tabungan)
-Tabel riwayat setiap mutasi penambahan atau pengurangan saldo pada target tabungan.
+Tabel riwayat setiap mutasi penambahan atau penarikan saldo.
 
 | Atribut | Tipe Data | Nullable | Default | Deskripsi |
 | :--- | :--- | :---: | :--- | :--- |
 | `id` | `INTEGER` | NO | AUTO_INCREMENT | Primary Key. |
-| `goal_id` | `INTEGER` | NO | - | Foreign Key mengarah ke `SAVINGS_GOAL.id` (ON DELETE CASCADE). |
+| `goal_id` | `INTEGER` | NO | - | Foreign Key ke `SAVINGS_GOAL.id` (ON DELETE CASCADE). |
 | `transaction_type` | `VARCHAR(10)` | NO | `'DEPOSIT'` | Tipe mutasi: `'DEPOSIT'` (+) atau `'WITHDRAW'` (-). |
 | `amount` | `DECIMAL(14,2)`| NO | - | Nominal mutasi (harus > 0). |
-| `transaction_date` | `DATE` | NO | `current_date` | Tanggal transaksi dilakukan. |
-| `note` | `VARCHAR(255)`| YES | NULL | Catatan singkat sumber uang atau alasan penarikan. |
+| `transaction_date` | `DATE` | NO | `current_date` | Tanggal mutasi dilakukan. |
+| `note` | `VARCHAR(255)`| YES | NULL | Catatan singkat sumber uang / keterangan. |
 | `created_at` | `DATETIME` | NO | `now()` | Timestamp pencatatan transaksi. |
 
 ---
 
 #### 3. Entitas: `SAVINGS_REMINDER` (Pengingat Jadwal Tabungan)
-Tabel penyimpan jadwal pengingat untuk menabung pada target tertentu.
+Tabel pengingat periodik untuk menyisihkan uang ke celengan.
 
 | Atribut | Tipe Data | Nullable | Default | Deskripsi |
 | :--- | :--- | :---: | :--- | :--- |
 | `id` | `INTEGER` | NO | AUTO_INCREMENT | Primary Key. |
-| `goal_id` | `INTEGER` | NO | - | Foreign Key mengarah ke `SAVINGS_GOAL.id` (ON DELETE CASCADE). |
-| `title` | `VARCHAR(100)` | NO | - | Pesan pengingat (contoh: "Waktunya isi celengan laptop!"). |
+| `goal_id` | `INTEGER` | NO | - | Foreign Key ke `SAVINGS_GOAL.id` (ON DELETE CASCADE). |
+| `title` | `VARCHAR(100)` | NO | - | Pesan pengingat menabung. |
 | `frequency` | `VARCHAR(20)` | NO | `'DAILY'` | Jadwal berulang: `'DAILY'`, `'WEEKLY'`, `'MONTHLY'`. |
 | `reminder_time` | `TIME` | NO | `'20:00:00'` | Waktu jam pengingat dimunculkan. |
-| `is_active` | `BOOLEAN` | NO | `TRUE` | Status aktif/non-aktif pengingat. |
-| `last_notified_date`| `DATE` | YES | NULL | Tanggal terakhir notifikasi diberikan agar tidak duplikat. |
+| `is_active` | `BOOLEAN` | NO | `TRUE` | Status aktif/nonaktif jadwal. |
+| `last_notified_date`| `DATE` | YES | NULL | Tanggal terakhir notifikasi diberikan. |
 | `created_at` | `DATETIME` | NO | `now()` | Timestamp pembuatan pengingat. |
 
 ---
 
-#### 4. Entitas: `APP_SETTING` (Konfigurasi & Profil Pengguna Tunggal)
-Tabel singleton (hanya 1 baris) penyimpan preferensi aplikasi personal.
+#### 4. Entitas: `APP_SETTING` (Konfigurasi Singleton)
+Tabel konfigurasi preferensi pengguna tunggal.
 
 | Atribut | Tipe Data | Nullable | Default | Deskripsi |
 | :--- | :--- | :---: | :--- | :--- |
-| `id` | `INTEGER` | NO | `1` | Primary Key (dibatasi 1 row saja). |
-| `user_display_name` | `VARCHAR(50)` | NO | `'Sahabat Menabung'` | Nama panggilan pengguna untuk sapaan di Dashboard. |
-| `currency_symbol` | `VARCHAR(10)` | NO | `'Rp'` | Simbol tampilan mata uang. |
+| `id` | `INTEGER` | NO | `1` | Primary Key singleton (1 baris saja). |
+| `user_display_name` | `VARCHAR(50)` | NO | `'Sahabat Menabung'` | Nama panggilan pengguna untuk salam di Dashboard. |
+| `currency_symbol` | `VARCHAR(10)` | NO | `'Rp'` | Simbol mata uang default. |
 | `date_format` | `VARCHAR(20)` | NO | `'DD/MM/YYYY'` | Format tanggal aplikasi. |
-| `reminder_enabled` | `BOOLEAN` | NO | `TRUE` | Toggle global banner/notifikasi pengingat. |
-| `reminder_time` | `TIME` | NO | `'20:00:00'` | Waktu default harian pengingat menabung. |
-| `updated_at` | `DATETIME` | NO | `now()` | Timestamp konfigurasi terakhir diperbarui. |
+| `reminder_enabled` | `BOOLEAN` | NO | `TRUE` | Toggle global pengingat. |
+| `reminder_time` | `TIME` | NO | `'20:00:00'` | Jam default pengingat menabung. |
+| `updated_at` | `DATETIME` | NO | `now()` | Timestamp pembaruan konfigurasi. |
 
 ---
 
-## 8. Hubungan / Relasi Antar Entitas (Relationships)
-1. **`SAVINGS_GOAL` (1) ke `TRANSACTION` (N)**:
-   - Relasi *One-to-Many*.
-   - Satu target tabungan dapat memiliki banyak riwayat transaksi mutasi (setor atau tarik).
-   - Menghapus satu target akan secara otomatis menghapus seluruh transaksi terkait (`ON DELETE CASCADE`).
-   - Saldo `current_amount` pada `SAVINGS_GOAL` merupakan agregasi:
-     $$\text{current\_amount} = \sum(\text{DEPOSIT}) - \sum(\text{WITHDRAW})$$
-
-2. **`SAVINGS_GOAL` (1) ke `SAVINGS_REMINDER` (N)**:
-   - Relasi *One-to-Many* (atau 1-to-1 tergantung kebutuhan konfigurasi target).
-   - Satu target tabungan dapat memiliki jadwal pengingat khusus.
-   - Dihapus otomatis jika target tabungan dihapus (`ON DELETE CASCADE`).
-
-3. **`APP_SETTING`**:
-   - Berdiri sendiri (*standalone singleton table*) sebagai referensi preferensi global sistem pengguna tunggal.
-
----
-
-## 9. Penutup
-Dokumen PRD & ERD ini menjadi acuan spesifikasi formal sebelum proses perancangan kode DATH Stack dimulai. Seluruh kebutuhan disusun dengan mempertimbangkan efisiensi, standar tugas akademik UTS, kemudahan pengujian, serta kepatuhan pada prinsip *clean architecture* dan Google Material Design 3.
+## 8. Penutup
+Spesifikasi PRD, User Flow, dan ERD ini telah diselaraskan dengan arsitektur termutakhir aplikasi Celengan, mencakup penyempurnaan UI modal terpusat, pemilihan frekuensi kustom, modal konfirmasi hapus aman, serta optimasi performa mobile tanpa lag.
