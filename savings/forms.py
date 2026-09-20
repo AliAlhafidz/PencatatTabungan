@@ -8,6 +8,7 @@ class SavingsGoalForm(forms.ModelForm):
         fields = [
             'name',
             'image',
+            'image_ratio',
             'target_amount',
             'period_frequency',
             'planned_amount_per_period',

@@ -7,7 +7,9 @@
         displayPlannedAmount: '',
         frequency: '{{ form.period_frequency.value|default:"WEEKLY" }}',
         imagePreview: '{% if goal.image %}{{ goal.image.url }}{% endif %}',
+        imageRatio: '{{ goal.image_ratio|default:"4:3" }}',
         showFrequencyModal: false,
+        showRatioPicker: false,
 
         get frequencyLabel() {
             if (this.frequency === 'DAILY') return 'Harian';
@@ -50,11 +52,13 @@
             const file = event.target.files[0];
             if (file) {
                 this.imagePreview = URL.createObjectURL(file);
+                this.showRatioPicker = true;
             }
         },
 
         removeImage() {
             this.imagePreview = '';
+            this.showRatioPicker = false;
             const input = document.getElementById('id_image');
             if (input) input.value = '';
         },
@@ -111,9 +115,19 @@
             <!-- Upload Foto Target -->
             <div class="space-y-1.5">
                 <label class="text-xs font-bold text-apptext">Foto / Gambar Target (Opsional)</label>
-                <div class="flex items-center gap-3.5 bg-surface-container-high/60 p-3 rounded-3xl border border-outline-variant/25">
-                    <!-- Preview Thumbnail -->
-                    <div class="w-16 h-16 rounded-2xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30 shrink-0">
+                <!-- Hidden input for image_ratio -->
+                <input type="hidden" name="image_ratio" :value="imageRatio">
+
+                <!-- Photo Row: Thumbnail + Upload Controls -->
+                <div class="flex items-start gap-3.5 bg-surface-container-high/60 p-3 rounded-3xl border border-outline-variant/25">
+                    <!-- Preview Thumbnail — dynamic ratio via inline style -->
+                    <div class="rounded-2xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30 shrink-0 transition-all duration-300"
+                         :style="imagePreview
+                             ? (imageRatio === '1:1'   ? 'width:64px; height:64px;'
+                              : imageRatio === '3:4'   ? 'width:52px; height:70px;'
+                              : imageRatio === '16:9'  ? 'width:80px; height:45px;'
+                              : /* 4:3 default */        'width:64px; height:48px;')
+                             : 'width:64px; height:64px;'">
                         <template x-if="imagePreview">
                             <img :src="imagePreview" class="w-full h-full object-cover">
                         </template>
@@ -135,7 +149,64 @@
                         <p class="text-[10px] text-outline">Bisa berupa foto barang impian atau liburan.</p>
                     </div>
                 </div>
+
+                <!-- Aspect Ratio Picker — muncul setelah foto dipilih -->
+                <div x-show="imagePreview" x-cloak class="space-y-2">
+                    <p class="text-[11px] font-bold text-outline uppercase tracking-wide">Ukuran / Rasio Gambar</p>
+                    <div class="grid grid-cols-4 gap-2">
+                        <!-- 1:1 -->
+                        <button type="button"
+                                @click="imageRatio = '1:1'"
+                                :class="imageRatio === '1:1'
+                                    ? 'bg-primary text-surface border-primary shadow-md shadow-primary/20'
+                                    : 'bg-surface-container-high text-outline border-outline-variant/30 hover:border-primary/40 hover:text-primary'"
+                                class="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-2xl border text-[10px] font-bold transition-all touch-bounce">
+                            <!-- Visual: square -->
+                            <div class="w-6 h-6 rounded-sm border-2"
+                                 :class="imageRatio === '1:1' ? 'border-surface' : 'border-outline'"></div>
+                            1:1
+                        </button>
+                        <!-- 4:3 -->
+                        <button type="button"
+                                @click="imageRatio = '4:3'"
+                                :class="imageRatio === '4:3'
+                                    ? 'bg-primary text-surface border-primary shadow-md shadow-primary/20'
+                                    : 'bg-surface-container-high text-outline border-outline-variant/30 hover:border-primary/40 hover:text-primary'"
+                                class="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-2xl border text-[10px] font-bold transition-all touch-bounce">
+                            <!-- Visual: landscape rect -->
+                            <div class="w-7 h-[21px] rounded-sm border-2"
+                                 :class="imageRatio === '4:3' ? 'border-surface' : 'border-outline'"></div>
+                            4:3
+                        </button>
+                        <!-- 3:4 -->
+                        <button type="button"
+                                @click="imageRatio = '3:4'"
+                                :class="imageRatio === '3:4'
+                                    ? 'bg-primary text-surface border-primary shadow-md shadow-primary/20'
+                                    : 'bg-surface-container-high text-outline border-outline-variant/30 hover:border-primary/40 hover:text-primary'"
+                                class="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-2xl border text-[10px] font-bold transition-all touch-bounce">
+                            <!-- Visual: portrait rect -->
+                            <div class="w-[18px] h-6 rounded-sm border-2"
+                                 :class="imageRatio === '3:4' ? 'border-surface' : 'border-outline'"></div>
+                            3:4
+                        </button>
+                        <!-- 16:9 -->
+                        <button type="button"
+                                @click="imageRatio = '16:9'"
+                                :class="imageRatio === '16:9'
+                                    ? 'bg-primary text-surface border-primary shadow-md shadow-primary/20'
+                                    : 'bg-surface-container-high text-outline border-outline-variant/30 hover:border-primary/40 hover:text-primary'"
+                                class="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-2xl border text-[10px] font-bold transition-all touch-bounce">
+                            <!-- Visual: wide rect -->
+                            <div class="w-8 h-[18px] rounded-sm border-2"
+                                 :class="imageRatio === '16:9' ? 'border-surface' : 'border-outline'"></div>
+                            16:9
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-outline">Pilih rasio sesuai bentuk foto yang kamu inginkan pada kartu.</p>
+                </div>
             </div>
+
 
             <!-- Target Nominal (Dengan Titik Otomatis) -->
             <div class="space-y-1.5">

@@ -47,7 +47,15 @@ class SavingsGoal(models.Model):
     description = models.TextField(blank=True, null=True)
     icon_name = models.CharField(max_length=50, default='savings')
     color_theme = models.CharField(max_length=20, choices=COLOR_CHOICES, default='blue')
+    IMAGE_RATIO_CHOICES = [
+        ('1:1', 'Kotak (1:1)'),
+        ('4:3', 'Landscape (4:3)'),
+        ('3:4', 'Portrait (3:4)'),
+        ('16:9', 'Widescreen (16:9)'),
+    ]
+
     image = models.ImageField(upload_to='goals/', blank=True, null=True)
+    image_ratio = models.CharField(max_length=10, choices=IMAGE_RATIO_CHOICES, default='4:3', blank=True)
     target_amount = models.DecimalField(max_digits=14, decimal_places=2)
     current_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     currency = models.CharField(max_length=10, default='IDR')

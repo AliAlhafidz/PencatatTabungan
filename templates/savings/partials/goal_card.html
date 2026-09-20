@@ -2,7 +2,13 @@
 <div class="group relative bg-surface-container rounded-3xl overflow-hidden border border-outline-variant/25 hover:border-primary/40 transition-all duration-300 shadow-md hover:shadow-xl flex flex-col justify-between anim-slide-up">
     {% if goal.image %}
     <!-- Goal Cover Image -->
-    <div class="relative w-full h-40 overflow-hidden bg-surface-container-highest">
+    {% if goal.image_ratio == '3:4' %}
+    <div class="relative w-full h-56 overflow-hidden bg-surface-container-highest">
+    {% elif goal.image_ratio == '16:9' %}
+    <div class="relative w-full h-44 overflow-hidden bg-surface-container-highest">
+    {% else %}
+    <div class="relative w-full h-48 overflow-hidden bg-surface-container-highest">
+    {% endif %}
         <img src="{{ goal.image.url }}" alt="{{ goal.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
         <div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/20 to-transparent"></div>
         <!-- Status / Estimation Badge Overlaid on Image -->
@@ -21,6 +27,7 @@
         </div>
     </div>
     {% endif %}
+
 
     <div class="p-5 flex flex-col justify-between gap-4 flex-1">
         <!-- Header Card: Icon, Name, Status Badge -->

@@ -14,11 +14,20 @@
     <!-- Main Detail Card -->
     <div class="rounded-4xl bg-surface-container overflow-hidden border border-outline-variant/30 shadow-xl">
         {% if goal.image %}
-        <div class="relative w-full h-48 overflow-hidden bg-surface-container-highest">
+        {% if goal.image_ratio == '3:4' %}
+        <div class="relative w-full h-64 overflow-hidden bg-surface-container-highest">
+        {% elif goal.image_ratio == '16:9' %}
+        <div class="relative w-full h-52 overflow-hidden bg-surface-container-highest">
+        {% elif goal.image_ratio == '1:1' %}
+        <div class="relative w-full h-56 overflow-hidden bg-surface-container-highest">
+        {% else %}
+        <div class="relative w-full h-56 overflow-hidden bg-surface-container-highest">
+        {% endif %}
             <img src="{{ goal.image.url }}" alt="{{ goal.name }}" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/30 to-transparent"></div>
         </div>
         {% endif %}
+
         
         <div class="p-6 space-y-5">
             <!-- Header Info -->
