@@ -1,15 +1,14 @@
 <div id="active-modal" 
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-opacity"
      x-data="{
-        targetAmount: '{{ form.target_amount.value|default:"" }}',
+        targetAmount: '{{ form.target_amount.value|floatformat:"0"|default:"" }}',
         displayTargetAmount: '',
-        plannedAmount: '{{ form.planned_amount_per_period.value|default:"" }}',
+        plannedAmount: '{{ form.planned_amount_per_period.value|floatformat:"0"|default:"" }}',
         displayPlannedAmount: '',
         frequency: '{{ form.period_frequency.value|default:"WEEKLY" }}',
         imagePreview: '{% if goal.image %}{{ goal.image.url }}{% endif %}',
         imageRatio: '{{ goal.image_ratio|default:"4:3" }}',
         showFrequencyModal: false,
-        showRatioPicker: false,
 
         get frequencyLabel() {
             if (this.frequency === 'DAILY') return 'Harian';
@@ -20,12 +19,14 @@
 
         init() {
             if (this.targetAmount) {
-                this.targetAmount = this.targetAmount.toString().split('.')[0];
+                this.targetAmount = this.targetAmount.toString().replace(/\D/g, '');
                 this.displayTargetAmount = this.formatDots(this.targetAmount);
             }
-            if (this.plannedAmount && Number(this.plannedAmount) > 0) {
-                this.plannedAmount = this.plannedAmount.toString().split('.')[0];
-                this.displayPlannedAmount = this.formatDots(this.plannedAmount);
+            if (this.plannedAmount) {
+                this.plannedAmount = this.plannedAmount.toString().replace(/\D/g, '');
+                if (Number(this.plannedAmount) > 0) {
+                    this.displayPlannedAmount = this.formatDots(this.plannedAmount);
+                }
             }
         },
 
@@ -48,17 +49,55 @@
             this.displayPlannedAmount = this.formatDots(raw);
         },
 
-        onFileChange(event) {
-            const file = event.target.files[0];
-            if (file) {
-                this.imagePreview = URL.createObjectURL(file);
-                this.showRatioPicker = true;
+        async onFileChange(event) {
+            const input = event.target;
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (this.imagePreview && this.imagePreview.startsWith('blob:')) URL.revokeObjectURL(this.imagePreview);
+            this.imagePreview = URL.createObjectURL(file);
+            const jpg = await this.toJpeg(file);
+            if (jpg && window.DataTransfer) {
+                const dt = new DataTransfer();
+                dt.items.add(jpg);
+                input.files = dt.files;
+                URL.revokeObjectURL(this.imagePreview);
+                this.imagePreview = URL.createObjectURL(jpg);
             }
         },
 
+        toJpeg(file) {
+            return new Promise((resolve) => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => {
+                    const max = 1280;
+                    let w = img.naturalWidth, h = img.naturalHeight;
+                    if (!w || !h) { URL.revokeObjectURL(url); resolve(null); return; }
+                    if (Math.max(w, h) > max) {
+                        const k = max / Math.max(w, h);
+                        w = Math.round(w * k);
+                        h = Math.round(h * k);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, w, h);
+                    ctx.drawImage(img, 0, 0, w, h);
+                    canvas.toBlob((blob) => {
+                        URL.revokeObjectURL(url);
+                        resolve(blob ? new File([blob], 'foto.jpg', { type: 'image/jpeg' }) : null);
+                    }, 'image/jpeg', 0.85);
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+                img.src = url;
+            });
+        },
+
         removeImage() {
+            if (this.imagePreview && this.imagePreview.startsWith('blob:')) URL.revokeObjectURL(this.imagePreview);
             this.imagePreview = '';
-            this.showRatioPicker = false;
             const input = document.getElementById('id_image');
             if (input) input.value = '';
         },
@@ -100,10 +139,16 @@
         </div>
 
         <!-- Form -->
-        <form {% if is_edit %}action="{% url 'goal_edit' goal.pk %}"{% else %}action="{% url 'goal_create' %}"{% endif %} 
+        <form {% if is_edit %}action="{% url 'goal_edit' goal.pk %}"{% else %}action="{% url 'goal_create' %}"{% endif %}
+              hx-post="{% if is_edit %}{% url 'goal_edit' goal.pk %}{% else %}{% url 'goal_create' %}{% endif %}"
+              hx-target="#modal-container"
+              hx-swap="innerHTML"
               method="post" 
               enctype="multipart/form-data"
               class="space-y-4">
+            {% if form.non_field_errors %}
+            <div class="p-3 rounded-2xl bg-error/10 border border-error/30 text-xs text-error font-semibold">{{ form.non_field_errors|join:' — ' }}</div>
+            {% endif %}
             {% csrf_token %}
 
             <!-- Nama Target -->
@@ -142,11 +187,14 @@
                             <span class="material-symbols-rounded text-base">upload_file</span>
                             <span x-text="imagePreview ? 'Ganti Foto' : 'Pilih Foto'"></span>
                         </label>
-                        <input type="file" name="image" id="id_image" accept="image/*" class="hidden" @change="onFileChange($event)">
+                        <input type="file" name="image" id="id_image" accept="image/*,.heic,.heif" class="hidden" @change="onFileChange($event)">
                         <button type="button" x-show="imagePreview" @click="removeImage()" class="ml-2 text-xs text-error hover:underline font-semibold">
                             Hapus
                         </button>
                         <p class="text-[10px] text-outline">Bisa berupa foto barang impian atau liburan.</p>
+                        {% if form.image.errors %}
+                        <p class="text-[11px] font-semibold text-error mt-0.5">{{ form.image.errors|join:' — ' }}</p>
+                        {% endif %}
                     </div>
                 </div>
 
